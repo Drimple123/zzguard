@@ -2,7 +2,8 @@ package freechips.rocketchip.zzguardrr
 
 import chisel3._
 import chisel3.util._
-import freechips.rocketchip.tile.ClockDividerN
+import freechips.rocketchip.tile.{ClockDividerN, clkdiv2_zz, clkdiv4_zz}
+
 
 class zzguardrr extends Module{
   val io = IO(new Bundle{
@@ -76,12 +77,26 @@ class zzguardrr extends Module{
   //   }
 
   // }
+  // val clkdiv_zz = Module(new clkdiv4_zz)
+  // clkdiv_zz.io.clk_in := clock
+  // val clkzz_out = Wire(Clock())
+  // clkzz_out := clkdiv_zz.io.clk_out
+  // dontTouch(clkzz_out)
 
-  val clk_div = Module(new ClockDividerN(4))
+  val clk_div = Module(new clkdiv4_zz)
   clk_div.io.clk_in := clock
 
   val q = VecInit(Seq.fill(2)(Module(new asyncfifo(16, 160)).io))
   
+  //看counter的fifo的num的积累情况
+  val num_num = RegInit(VecInit(Seq.fill(15)(0.U(12.W))))
+  dontTouch(num_num)
+  for(i <- 1 to 14){
+    when(q(1).wen && (q(1).num_out === i.U)){
+      num_num(i) := num_num(i) + 1.U
+    }
+  }
+
   //fifo的enq端接cat,valid由bitmap决定
   for(i <- 0 to 1){
 

@@ -139,11 +139,11 @@ trait HasRocketCoreIO extends HasRocketCoreParameters {
     val traceStall = Input(Bool())
 
      //===== zzguardrr: Start ====//
-    // val valid = Output(Bool())      //wb_reg_valid
-    // val pc    = Output(UInt(40.W))  //wb_reg_pc
-    // val ins   = Output(UInt(32.W))  //wb_reg_inst
-    // val wdata = Output(UInt(64.W))  //wb_reg_wdata
-    // val mdata = Output(UInt(64.W))  //mem_reg_wdata
+    val valid = Output(Bool())      //wb_reg_valid
+    val pc    = Output(UInt(40.W))  //wb_reg_pc
+    val ins   = Output(UInt(32.W))  //wb_reg_inst
+    val wdata = Output(UInt(64.W))  //wb_reg_wdata
+    val mdata = Output(UInt(64.W))  //mem_reg_wdata
 
     // //val full_counter = Input(Bool()) //counter的fifo满了
      val yaofull_counter = Input(Bool())
@@ -311,6 +311,15 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
   val mdata_r = RegNext(mem_reg_wdata, 0.U)
   io.rocc.mdata  := mdata_r
   //===== zzguardrrlht: End   ====//
+
+  //===== zzguardrr: Start ====//
+  io.valid  := wb_reg_valid
+  io.pc     := wb_reg_pc
+  io.ins    := wb_reg_inst
+  io.wdata  := wb_reg_wdata
+  //val mdata_r = RegNext(mem_reg_wdata, 0.U)
+  io.mdata  := mdata_r
+  //===== zzguardrr: End   ====//
 
   val take_pc_mem_wb = take_pc_wb || take_pc_mem
   val take_pc = take_pc_mem_wb

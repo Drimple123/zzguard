@@ -137,10 +137,22 @@ class zzguardrr_ramImp(outer: zzguardrr_ram)(implicit p: Parameters) extends Laz
 
   // }
 
-  val clk_div = Module(new ClockDividerN(4))
+  val clk_div = Module(new ClockDividerN(2))
   clk_div.io.clk_in := clock
 
   val q = VecInit(Seq.fill(2)(Module(new asyncfifo(16, 160)).io))
+  
+  //用于rocc输出counter_sl返回的number
+  val q_back = Module(new asyncfifo(8,20))
+  q_back.clock := clk_div.io.clk_out
+  q_back.io.clk_r := clock
+  
+  q_back.io.ren := true.B
+  q_back.io.wen := true.B
+
+  
+
+
   
   //fifo的enq端接cat,valid由bitmap决定
   for(i <- 0 to 1){
@@ -166,6 +178,9 @@ class zzguardrr_ramImp(outer: zzguardrr_ram)(implicit p: Parameters) extends Laz
   val ss      = Module(new shadow_stack)
   val counter = Module(new counter_sl)
 
+  q_back.io.wdata := counter.io.number_load
+  io.resp.bits.data  := q_back.io.rdata
+
   //io.full_counter := q(1).full
   io.yaofull_counter_out := q(1).yaofull
 
@@ -179,6 +194,7 @@ class zzguardrr_ramImp(outer: zzguardrr_ram)(implicit p: Parameters) extends Laz
   q(1).ren   := counter.io.ready
   counter.io.valid    := !(q(1).empty)
   counter.io.din      := q(1).rdata
+  
   
 
 

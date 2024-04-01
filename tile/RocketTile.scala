@@ -28,6 +28,21 @@ class ClockDividerN(div: Int) extends BlackBox(Map("DIV" -> div)) with HasBlackB
   })
   addResource("/vsrc/ClockDividerN.sv")
 }
+
+class clkdiv2_zz extends HasBlackBoxResource{
+  val io = IO(new Bundle{
+    val clk_in = Input(Clock())
+    val clk_out = Output(Clock())
+  })
+  addResource("/vsrc/clkdiv2_zz.v")
+}
+class clkdiv4_zz extends HasBlackBoxResource{
+  val io = IO(new Bundle{
+    val clk_in = Input(Clock())
+    val clk_out = Output(Clock())
+  })
+  addResource("/vsrc/clkdiv4_zz.v")
+}
 //===== zzguardrr: End   ====//
 
 
@@ -267,13 +282,13 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
   dcacheArb.io.requestor <> dcachePorts.toSeq
   ptw.io.requestor <> ptwPorts.toSeq
 
-//   //===== zzguardrr: Start ====//
-//   val zzguard = Module(new zzguardrr)
-//   zzguard.io.valid      := core.io.valid
-//   zzguard.io.din_pc     := core.io.pc
-//   zzguard.io.din_ins    := core.io.ins
-//   zzguard.io.din_wdata  := core.io.wdata
-//   zzguard.io.din_mdata  := core.io.mdata
+//===== zzguardrr: Start ====//
+  val zzguard = Module(new zzguardrr)
+  zzguard.io.valid      := core.io.valid
+  zzguard.io.din_pc     := core.io.pc
+  zzguard.io.din_ins    := core.io.ins
+  zzguard.io.din_wdata  := core.io.wdata
+  zzguard.io.din_mdata  := core.io.mdata
 //   core.io.yaofull_counter  := zzguard.io.yaofull_counter
 
 //   val zzguard_ram = Module(new zzguardrr_ram)
@@ -297,7 +312,7 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
 //     zzguard_ram.io.valid_config := false.B
 //   }
 
-//   //===== zzguardrr: End   ====//
+//===== zzguardrr: End   ====//
 
 // }
     }

@@ -13,6 +13,15 @@ import chisel3.util._
 //   addResource("vsrc/ClockDividerN.sv")
 // }
 
+
+class gray2bin(width:Int) extends BlackBox(Map("WIDTH" -> width)) with HasBlackBoxResource{
+  val io =IO(new Bundle{
+    val gray = Input(UInt(width.W))
+    val bin  = Output(UInt(width.W))
+  })
+  addResource("/vsrc/gray2bin.v")
+}
+
 class asyncfifo(depth: Int, width: Int) extends Module{
   val io = IO(new Bundle{
     val clk_r   = Input(Clock())
@@ -23,7 +32,7 @@ class asyncfifo(depth: Int, width: Int) extends Module{
     val rdata   = Output(UInt(width.W))
     val empty   = Output(Bool())
     val yaofull = Output(Bool())
-    //val num_r_out     = Output(UInt(6.W))
+    val num_out = Output(UInt(6.W))
   })
 
   //分下clock
@@ -83,13 +92,17 @@ class asyncfifo(depth: Int, width: Int) extends Module{
     //将写指针转换为格雷码
     rpg := (rp >> 1.U) ^ rp
 
+    //val mem_out = WireDefault(0.U)
+    
+    //io.rdata := mem_out
     //读fifo, 读地址要忽略rp的最高位
-    when(io.ren && !empty_w){
-      io.rdata := mem(rp(pw-2, 0))
-    }
-    .otherwise{
-      io.rdata := 0.U
-    }
+    io.rdata := mem(rp(pw-2, 0))
+    // when(io.ren && !empty_w){
+    //   mem_out := mem(rp(pw-2, 0))
+    // }
+    // .otherwise{
+    //   io.rdata := 0.U
+    // }
     //io.rdata := mem(rp(pw-2, 0))
 
     //wpg打两拍
@@ -120,9 +133,15 @@ class asyncfifo(depth: Int, width: Int) extends Module{
   val rpg_1 = RegNext(rpg, 0.U)
   val rpg_2 = RegNext(rpg_1, 0.U)
 
-  //rp打两拍
-  val rp_1 = RegNext(rp_n, 0.U)
-  val rp_2 = RegNext(rp_1, 0.U)
+  val rp_2 = RegInit(0.U(pw.W))
+
+  val gray2bin_1 = Module(new gray2bin(pw))
+  gray2bin_1.io.gray := rpg_1
+  rp_2 := gray2bin_1.io.bin
+  dontTouch(rp_2)
+  // //rp打两拍
+  // val rp_1 = RegNext(rp_n, 0.U)
+  // val rp_2 = RegNext(rp_1, 0.U)
 
   //计算fifo中数据量
   when(wp >= rp_2){
@@ -139,7 +158,7 @@ class asyncfifo(depth: Int, width: Int) extends Module{
     num_r := wp + (1.U << pw.U) - rp_2
   }
 
-
+  io.num_out := num
 
   //判断是否满
   when(wpg === Cat(~rpg_2(pw-1, pw-2), rpg_2(pw-3, 0))){
