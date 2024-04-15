@@ -172,6 +172,10 @@ trait CanAttachTile {
     connectOutputNotifications(domain, context)
     connectInputConstants(domain, context)
     connectTrace(domain, context)
+
+    //===== zzguardrr: Start ====//
+    connect_zz(domain, context)
+    //===== zzguardrr: End   ====//
   }
 
   /** Connect the port where the tile is the master to a TileLink interconnect. */
@@ -182,6 +186,18 @@ trait CanAttachTile {
       bus :=* crossingParams.master.injectNode(context) :=* domain.crossMasterPort(crossingParams.crossingType)
     }
   }
+
+  //===== zzguardrr: Start ====//
+   def connect_zz(domain: TilePRCIDomain[TileType], context: TileContextType): Unit = {
+    implicit val p = context.p
+    if(domain.element.tileId == 0){
+      context.ins_tile_mid := domain.element.ins_tile_out.get
+    }
+    else if(domain.element.tileId == 1){
+      domain.element.ins_tile_in.get := context.ins_tile_mid
+    }
+  }
+  //===== zzguardrr: End   ====//
 
   /** Connect the port where the tile is the slave to a TileLink interconnect. */
   def connectSlavePorts(domain: TilePRCIDomain[TileType], context: Attachable): Unit = {

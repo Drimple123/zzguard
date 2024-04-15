@@ -13,4 +13,12 @@ class Zzzzz_Imp extends Module{
     out_r := out_r + 1.U
     io.out := out_r
 }
+class Zzzzzz_Imp extends Module{
+    val io = IO(new Bundle{
+        val in  = Input(UInt(32.W))
+        val out = Output(UInt(32.W))
+    })
+    dontTouch(io)
+    io.out := io.in
+}
 

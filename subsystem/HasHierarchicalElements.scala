@@ -169,6 +169,10 @@ trait DefaultHierarchicalElementContextType
   val tileResetVectorNodes: SortedMap[Int, BundleBridgeNode[UInt]]
   val traceCoreNodes: SortedMap[Int, BundleBridgeNode[TraceCoreInterface]]
   val traceNodes: SortedMap[Int, BundleBridgeNode[TraceBundle]]
+
+  //===== zzguardrr: Start ====//
+  val ins_tile_mid = BundleBridgeIdentityNode[UInt]()
+  //===== zzguardrr: End   ====//
 }
 
 /** This trait provides the tile attachment context for the root (outermost) subsystem */

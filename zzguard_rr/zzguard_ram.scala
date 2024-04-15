@@ -45,13 +45,15 @@ class zzguardrr_ramImp(outer: zzguardrr_ram)(implicit p: Parameters) extends Laz
   io.resp.valid              := cmd.valid
   //io.resp.bits.data          := counter.io.number_load
   io.busy                    := cmd.valid
+  
+  //mask,写表之前为0,写完表置1,程序运行完之后置0
+  val cfg_mask = RegInit(0.U)
 
-
-  valid := io.valid
-  din_pc := io.pc
-  din_ins     := io.ins
-  din_wdata   := io.wdata
-  din_mdata   := io.mdata
+  valid       := io.valid & cfg_mask
+  din_pc      := io.pc & Fill(40, cfg_mask)
+  din_ins     := io.ins & Fill(32, cfg_mask)
+  din_wdata   := io.wdata & Fill(64, cfg_mask)
+  din_mdata   := io.mdata & Fill(64, cfg_mask)
   
   //因为查表控制信号慢了1拍，所以数据也慢1拍
   val ins_r   = RegNext(din_ins,0.U)
@@ -67,7 +69,17 @@ class zzguardrr_ramImp(outer: zzguardrr_ram)(implicit p: Parameters) extends Laz
   table.io.data_in2 := rs2_val
 
   when(cmd.fire()){
-    when(funct === 1.U){
+    when(funct === 4.U){
+      cfg_mask := 1.U
+      table.io.wen1 := false.B
+      table.io.wen2 := false.B
+    }
+    .elsewhen(funct === 8.U){
+      cfg_mask := 0.U
+      table.io.wen1 := false.B
+      table.io.wen2 := false.B
+    }
+    .elsewhen(funct === 1.U){
       table.io.wen1 := true.B
       table.io.wen2 := false.B
     }

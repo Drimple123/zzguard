@@ -164,28 +164,18 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
 
   val core = Module(new Rocket(outer)(outer.p))
 
-  // //===== zzguardrr: Start ====//
-  // val zzzzz_4 = Module(new Zzzzz_Imp)
-  // val clk_div = Module(new ClockDividerN(4))
-  // clk_div.io.clk_in := core.clock
-  // zzzzz_4.clock := clk_div.io.clk_out
-  
-  // val opcode = WireDefault(0.U(7.W))
-  // opcode := core.io.ins(6,0)
+  //===== zzguardrr: Start ====//
+  if(outer.rocketParams.tileId == 0){
+    println("######zzguard###########   tileid: ",outer.rocketParams.tileId,"  ############")
+    outer.ins_tile_out.get.bundle := core.io.ins
 
-  // val fifo = Module(new asyncfifo(16, 32))
-  // fifo.io.clk_r := clk_div.io.clk_out
-  // fifo.io.wdata := core.io.ins
-  // fifo.io.ren := true.B
-  // when((opcode === "b0000011".U || opcode === "b0100011".U || opcode === "b1100111".U || opcode === "b1101111".U) && core.io.valid){
-  //   fifo.io.wen := true.B
-  // }
-  // .otherwise{
-  //   fifo.io.wen := false.B
-  // }
-
-      
-  // //===== zzguardrr: End   ====//
+  }
+  else if(outer.rocketParams.tileId == 1){
+    println("######zzguard###########   tileid: ",outer.rocketParams.tileId,"  ############")
+    val zzzzzz_tile1 = Module(new Zzzzzz_Imp)
+    zzzzzz_tile1.io.in := outer.ins_tile_in.get.bundle
+  }
+  //===== zzguardrr: End   ====//
 
   // reset vector is connected in the Frontend to s2_pc
   core.io.reset_vector := DontCare

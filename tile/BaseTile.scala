@@ -202,6 +202,14 @@ abstract class BaseTile private (crossing: ClockCrossingType, q: Parameters)
   def wfiNode: IntOutwardNode                 // Tile is waiting for an interrupt
   def module: BaseTileModuleImp[BaseTile]
 
+
+  //===== zzguardrr: Start ====//
+  val ins_tile_out: Option[BundleBridgeSource[UInt]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[UInt](Some(() => UInt(32.W)))) else None
+  val ins_tile_in: Option[BundleBridgeSink[UInt]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[UInt](Some(() => UInt(32.W)))) else None
+  //===== zzguardrr: End   ====//
+
+
+
   /** Node for broadcasting a hart id to diplomatic consumers within the tile. */
   val hartIdNexusNode: BundleBridgeNode[UInt] = BundleBroadcast[UInt](registered = p(InsertTimingClosureRegistersOnHartIds))
 

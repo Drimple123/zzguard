@@ -892,7 +892,7 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
     id_do_fence ||
     csr.io.csr_stall ||
     id_reg_pause ||
-    io.traceStall || io.yaofull_counter  //zzguard  counter yaofull了把cpu停住
+    io.traceStall //|| io.yaofull_counter  //zzguard  counter yaofull了把cpu停住
 
   ctrl_killd := !ibuf.io.inst(0).valid || ibuf.io.inst(0).bits.replay || take_pc_mem_wb || ctrl_stalld || csr.io.interrupt
 
