@@ -165,15 +165,28 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
   val core = Module(new Rocket(outer)(outer.p))
 
   //===== zzguardrr: Start ====//
+  core.io.rocc.asan_addr := 0.U
+  core.io.rocc.asan_size := 0.U
+  core.io.rocc.asan_valid := true.B
+
   if(outer.rocketParams.tileId == 0){
     println("######zzguard###########   tileid: ",outer.rocketParams.tileId,"  ############")
     outer.ins_tile_out.get.bundle := core.io.ins
 
+    outer.addr_out.get.bundle := outer.roccs(0).module.io.asan_addr
+    outer.size_out.get.bundle := outer.roccs(0).module.io.asan_size
+    outer.valid_out.get.bundle := outer.roccs(0).module.io.asan_valid
+
+  
   }
   else if(outer.rocketParams.tileId == 1){
     println("######zzguard###########   tileid: ",outer.rocketParams.tileId,"  ############")
     val zzzzzz_tile1 = Module(new Zzzzzz_Imp)
     zzzzzz_tile1.io.in := outer.ins_tile_in.get.bundle
+
+    zzzzzz_tile1.io.in_addr := outer.addr_in.get.bundle
+    zzzzzz_tile1.io.in_size := outer.size_in.get.bundle
+    zzzzzz_tile1.io.in_valid := outer.valid_in.get.bundle
   }
   //===== zzguardrr: End   ====//
 
@@ -256,6 +269,11 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     core.io.rocc.busy := DontCare
     core.io.rocc.interrupt := DontCare
   }
+
+  
+
+
+
   // Dont care mem since not all RoCC need accessing memory
   core.io.rocc.mem := DontCare
 

@@ -172,6 +172,9 @@ trait DefaultHierarchicalElementContextType
 
   //===== zzguardrr: Start ====//
   val ins_tile_mid = BundleBridgeIdentityNode[UInt]()
+  val addr_mid  = BundleBridgeIdentityNode[UInt]()
+  val size_mid  = BundleBridgeIdentityNode[UInt]()
+  val valid_mid = BundleBridgeIdentityNode[Bool]()
   //===== zzguardrr: End   ====//
 }
 
