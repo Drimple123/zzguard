@@ -152,6 +152,14 @@ trait HasRocketCoreIO extends HasRocketCoreParameters {
     // val rs1 = Output(UInt(64.W))
     // val rs2 = Output(UInt(64.W))
 
+    // if(tileParams.tileId == 1){
+    //   val asan_addr = Input(UInt(40.W))
+    //   val asan_size = Input(UInt(8.W))
+    //   val asan_valid= Input(Bool())
+    // }
+    val asan_addr = if(tileParams.tileId == 1) Some(Input(UInt(40.W))) else None
+    val asan_size = if(tileParams.tileId == 1) Some(Input(UInt(8.W))) else None
+    val asan_valid = if(tileParams.tileId == 1) Some(Input(Bool())) else None
      //===== zzguardrr: End   ====//
   })
 }
@@ -160,6 +168,7 @@ trait HasRocketCoreIO extends HasRocketCoreParameters {
 class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
     with HasRocketCoreParameters
     with HasRocketCoreIO {
+  
   def nTotalRoCCCSRs = tile.roccCSRs.flatten.size
 
   val clock_en_reg = RegInit(true.B)
@@ -172,6 +181,8 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
     else ClockGate(clock, clock_en, "rocket_clock_gate")
 
   class RocketImpl { // entering gated-clock domain
+  
+  
 
   // performance counters
   def pipelineIDToWB[T <: Data](x: T): T =
@@ -953,9 +964,36 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
   io.fpu.dmem_resp_tag := dmem_resp_waddr
   io.fpu.keep_clock_enabled := io.ptw.customCSRs.disableCoreClockGate
 
+  
+  //zzguard:start
+  if(tileParams.tileId == 1){
+  
+    val zzzzzz_core = Module(new Zzzzzz_Imp)
+    zzzzzz_core.io.in_addr := io.asan_addr.get
+    zzzzzz_core.io.in_size := io.asan_size.get
+    zzzzzz_core.io.in_valid := io.asan_valid.get
+  }
+
+  //   io.dmem.req.valid     := Mux(zzzzzz_core.io.out_valid, true.B, ex_reg_valid && ex_ctrl.mem)
+  //   io.dmem.req.bits.tag  := Mux(zzzzzz_core.io.out_valid, 0.U, ex_dcache_tag)
+  //   io.dmem.req.bits.cmd  := Mux(zzzzzz_core.io.out_valid, zzzzzz_core.io.cmd, ex_ctrl.mem_cmd)
+  //   io.dmem.req.bits.addr := Mux(zzzzzz_core.io.out_valid, zzzzzz_core.io.out_addr, encodeVirtualAddress(ex_rs(0), alu.io.adder_out))
+  //   io.dmem.s1_data.data  := Mux(zzzzzz_core.io.out_valid, zzzzzz_core.io.out_data, (if (fLen == 0) mem_reg_rs2 else Mux(mem_ctrl.fp, Fill((xLen max fLen) / fLen, io.fpu.store_data), mem_reg_rs2)))
+  //   io.dmem.req.bits.size := Mux(zzzzzz_core.io.out_valid, 0.U, ex_reg_mem_size)
+  // }
+  // else if(tileParams.tileId == 0)
+  // {
+  //   io.dmem.req.valid     := ex_reg_valid && ex_ctrl.mem
+  //   io.dmem.req.bits.tag  := ex_dcache_tag
+  //   io.dmem.req.bits.cmd  := ex_ctrl.mem_cmd
+  //   io.dmem.req.bits.addr := encodeVirtualAddress(ex_rs(0), alu.io.adder_out)
+  //   io.dmem.s1_data.data := (if (fLen == 0) mem_reg_rs2 else Mux(mem_ctrl.fp, Fill((xLen max fLen) / fLen, io.fpu.store_data), mem_reg_rs2))
+  //   io.dmem.req.bits.size := ex_reg_mem_size
+  // }
   io.dmem.req.valid     := ex_reg_valid && ex_ctrl.mem
   val ex_dcache_tag = Cat(ex_waddr, ex_ctrl.fp)
   require(coreParams.dcacheReqTagBits >= ex_dcache_tag.getWidth)
+
   io.dmem.req.bits.tag  := ex_dcache_tag
   io.dmem.req.bits.cmd  := ex_ctrl.mem_cmd
   io.dmem.req.bits.size := ex_reg_mem_size
@@ -969,6 +1007,12 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
   io.dmem.req.bits.no_xcpt := DontCare
   io.dmem.req.bits.data := DontCare
   io.dmem.req.bits.mask := DontCare
+
+
+
+  
+  
+
 
   io.dmem.s1_data.data := (if (fLen == 0) mem_reg_rs2 else Mux(mem_ctrl.fp, Fill((xLen max fLen) / fLen, io.fpu.store_data), mem_reg_rs2))
   io.dmem.s1_data.mask := DontCare

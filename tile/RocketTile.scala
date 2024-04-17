@@ -182,11 +182,15 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
   else if(outer.rocketParams.tileId == 1){
     println("######zzguard###########   tileid: ",outer.rocketParams.tileId,"  ############")
     val zzzzzz_tile1 = Module(new Zzzzzz_Imp)
-    zzzzzz_tile1.io.in := outer.ins_tile_in.get.bundle
+    //zzzzzz_tile1.io.in := outer.ins_tile_in.get.bundle
 
     zzzzzz_tile1.io.in_addr := outer.addr_in.get.bundle
     zzzzzz_tile1.io.in_size := outer.size_in.get.bundle
     zzzzzz_tile1.io.in_valid := outer.valid_in.get.bundle
+
+    core.io.asan_addr.get := outer.addr_in.get.bundle
+    core.io.asan_size.get := outer.size_in.get.bundle
+    core.io.asan_valid.get := outer.valid_in.get.bundle
   }
   //===== zzguardrr: End   ====//
 
