@@ -19,6 +19,7 @@ class Zzzzzz_Imp extends Module{
         val in_addr  = Input(UInt(40.W))
         val in_size  = Input(UInt(8.W))
         val in_valid = Input(Bool())
+        //val funct    = Input(UInt(5.W))//5是接收初始地址，6是malloc和free访存
 
         val tag      = Output(UInt(8.W))
         val out_valid= Output(Bool())
@@ -34,7 +35,7 @@ class Zzzzzz_Imp extends Module{
     })
     dontTouch(io)
     io.tag := 0.U
-    io.cmd := 1.U
+    io.cmd := 0.U
     io.out_addr := io.in_addr
     val data_r = RegInit(0.U(8.W))
     data_r := io.in_size

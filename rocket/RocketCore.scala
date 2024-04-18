@@ -964,7 +964,8 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
   io.fpu.dmem_resp_tag := dmem_resp_waddr
   io.fpu.keep_clock_enabled := io.ptw.customCSRs.disableCoreClockGate
 
-  
+  val ex_dcache_tag = Cat(ex_waddr, ex_ctrl.fp)
+  require(coreParams.dcacheReqTagBits >= ex_dcache_tag.getWidth)
   //zzguard:start
   if(tileParams.tileId == 1){
   
@@ -972,34 +973,43 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
     zzzzzz_core.io.in_addr := io.asan_addr.get
     zzzzzz_core.io.in_size := io.asan_size.get
     zzzzzz_core.io.in_valid := io.asan_valid.get
+    
+    val out_valid_r = RegNext(zzzzzz_core.io.out_valid, false.B)
+    val kill_r = RegInit(true.B)
+    when(zzzzzz_core.io.out_valid){
+      kill_r := false.B
+    }
+
+
+    io.dmem.req.valid     := Mux(zzzzzz_core.io.out_valid, true.B, ex_reg_valid && ex_ctrl.mem)
+    io.dmem.req.bits.tag  := Mux(zzzzzz_core.io.out_valid, 0.U, ex_dcache_tag)
+    io.dmem.req.bits.cmd  := Mux(zzzzzz_core.io.out_valid, zzzzzz_core.io.cmd, ex_ctrl.mem_cmd)
+    io.dmem.req.bits.addr := Mux(zzzzzz_core.io.out_valid, zzzzzz_core.io.out_addr, encodeVirtualAddress(ex_rs(0), alu.io.adder_out))
+    io.dmem.s1_data.data  := Mux(out_valid_r, zzzzzz_core.io.out_data, (if (fLen == 0) mem_reg_rs2 else Mux(mem_ctrl.fp, Fill((xLen max fLen) / fLen, io.fpu.store_data), mem_reg_rs2)))
+    io.dmem.req.bits.size := Mux(zzzzzz_core.io.out_valid, 0.U, ex_reg_mem_size)
+    //io.dmem.s1_kill       := Mux(out_valid_r, 0.U, killm_common || mem_ldst_xcpt || fpu_kill_mem)
+    io.dmem.s1_kill       := kill_r &&(killm_common || mem_ldst_xcpt || fpu_kill_mem)
   }
+  else if(tileParams.tileId == 0)
+  {
+    io.dmem.req.valid     := ex_reg_valid && ex_ctrl.mem
+    io.dmem.req.bits.tag  := ex_dcache_tag
+    io.dmem.req.bits.cmd  := ex_ctrl.mem_cmd
+    io.dmem.req.bits.addr := encodeVirtualAddress(ex_rs(0), alu.io.adder_out)
+    io.dmem.s1_data.data := (if (fLen == 0) mem_reg_rs2 else Mux(mem_ctrl.fp, Fill((xLen max fLen) / fLen, io.fpu.store_data), mem_reg_rs2))
+    io.dmem.req.bits.size := ex_reg_mem_size
+    io.dmem.s1_kill := killm_common || mem_ldst_xcpt || fpu_kill_mem
+  }
+  // io.dmem.req.valid     := ex_reg_valid && ex_ctrl.mem
+  // val ex_dcache_tag = Cat(ex_waddr, ex_ctrl.fp)
+  // require(coreParams.dcacheReqTagBits >= ex_dcache_tag.getWidth)
 
-  //   io.dmem.req.valid     := Mux(zzzzzz_core.io.out_valid, true.B, ex_reg_valid && ex_ctrl.mem)
-  //   io.dmem.req.bits.tag  := Mux(zzzzzz_core.io.out_valid, 0.U, ex_dcache_tag)
-  //   io.dmem.req.bits.cmd  := Mux(zzzzzz_core.io.out_valid, zzzzzz_core.io.cmd, ex_ctrl.mem_cmd)
-  //   io.dmem.req.bits.addr := Mux(zzzzzz_core.io.out_valid, zzzzzz_core.io.out_addr, encodeVirtualAddress(ex_rs(0), alu.io.adder_out))
-  //   io.dmem.s1_data.data  := Mux(zzzzzz_core.io.out_valid, zzzzzz_core.io.out_data, (if (fLen == 0) mem_reg_rs2 else Mux(mem_ctrl.fp, Fill((xLen max fLen) / fLen, io.fpu.store_data), mem_reg_rs2)))
-  //   io.dmem.req.bits.size := Mux(zzzzzz_core.io.out_valid, 0.U, ex_reg_mem_size)
-  // }
-  // else if(tileParams.tileId == 0)
-  // {
-  //   io.dmem.req.valid     := ex_reg_valid && ex_ctrl.mem
-  //   io.dmem.req.bits.tag  := ex_dcache_tag
-  //   io.dmem.req.bits.cmd  := ex_ctrl.mem_cmd
-  //   io.dmem.req.bits.addr := encodeVirtualAddress(ex_rs(0), alu.io.adder_out)
-  //   io.dmem.s1_data.data := (if (fLen == 0) mem_reg_rs2 else Mux(mem_ctrl.fp, Fill((xLen max fLen) / fLen, io.fpu.store_data), mem_reg_rs2))
-  //   io.dmem.req.bits.size := ex_reg_mem_size
-  // }
-  io.dmem.req.valid     := ex_reg_valid && ex_ctrl.mem
-  val ex_dcache_tag = Cat(ex_waddr, ex_ctrl.fp)
-  require(coreParams.dcacheReqTagBits >= ex_dcache_tag.getWidth)
-
-  io.dmem.req.bits.tag  := ex_dcache_tag
-  io.dmem.req.bits.cmd  := ex_ctrl.mem_cmd
-  io.dmem.req.bits.size := ex_reg_mem_size
+  // io.dmem.req.bits.tag  := ex_dcache_tag
+  // io.dmem.req.bits.cmd  := ex_ctrl.mem_cmd
+  // io.dmem.req.bits.size := ex_reg_mem_size
   io.dmem.req.bits.signed := !Mux(ex_reg_hls, ex_reg_inst(20), ex_reg_inst(14))
   io.dmem.req.bits.phys := false.B
-  io.dmem.req.bits.addr := encodeVirtualAddress(ex_rs(0), alu.io.adder_out)
+  // io.dmem.req.bits.addr := encodeVirtualAddress(ex_rs(0), alu.io.adder_out)
   io.dmem.req.bits.idx.foreach(_ := io.dmem.req.bits.addr)
   io.dmem.req.bits.dprv := Mux(ex_reg_hls, csr.io.hstatus.spvp, csr.io.status.dprv)
   io.dmem.req.bits.dv := ex_reg_hls || csr.io.status.dv
@@ -1014,10 +1024,10 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
   
 
 
-  io.dmem.s1_data.data := (if (fLen == 0) mem_reg_rs2 else Mux(mem_ctrl.fp, Fill((xLen max fLen) / fLen, io.fpu.store_data), mem_reg_rs2))
+  // io.dmem.s1_data.data := (if (fLen == 0) mem_reg_rs2 else Mux(mem_ctrl.fp, Fill((xLen max fLen) / fLen, io.fpu.store_data), mem_reg_rs2))
   io.dmem.s1_data.mask := DontCare
 
-  io.dmem.s1_kill := killm_common || mem_ldst_xcpt || fpu_kill_mem
+  //io.dmem.s1_kill := killm_common || mem_ldst_xcpt || fpu_kill_mem
   io.dmem.s2_kill := false.B
   // don't let D$ go to sleep if we're probably going to use it soon
   io.dmem.keep_clock_enabled := ibuf.io.inst(0).valid && id_ctrl.mem && !csr.io.csr_stall
