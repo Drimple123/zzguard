@@ -23,12 +23,12 @@ class zzguardrr_ramImp(outer: zzguardrr_ram)(implicit p: Parameters) extends Laz
     val din_mdata   =   Reg(UInt(64.W))
 
     //传到另一个核里去
-    val asan_io = IO(new Bundle{
-      val valid = Output(Bool())
-      val addr  = Output(UInt(40.W))
-      val size  = Output(UInt(40.W))
-    })
-    dontTouch(asan_io)
+    // val asan_io = IO(new Bundle{
+    //   val valid = Output(Bool())
+    //   val addr  = Output(UInt(40.W))
+    //   val size  = Output(UInt(40.W))
+    // })
+    // dontTouch(asan_io)
     
   //})
   
@@ -48,12 +48,12 @@ class zzguardrr_ramImp(outer: zzguardrr_ram)(implicit p: Parameters) extends Laz
   dontTouch(cmd)  
   dontTouch(io)
 
-  asan_io.addr := cmd.bits.rs1
-  asan_io.size := cmd.bits.rs2
+  // asan_io.addr := cmd.bits.rs1
+  // asan_io.size := cmd.bits.rs2
 
   io.asan_addr := cmd.bits.rs1
   io.asan_size := cmd.bits.rs2
-
+  io.asan_funct:= cmd.bits.inst.funct
 
   cmd.ready                  := true.B
   io.resp.bits.rd            := cmd.bits.inst.rd
@@ -84,48 +84,48 @@ class zzguardrr_ramImp(outer: zzguardrr_ram)(implicit p: Parameters) extends Laz
   table.io.data_in2 := rs2_val
 
   when(cmd.fire()){
-    when(funct === 5.U){//传到另一个核的asan
+    when((funct === 5.U)||(funct === 6.U)){//传到另一个核的asan
       io.asan_valid := true.B
-      asan_io.valid := true.B
+      //asan_io.valid := true.B
       table.io.wen1 := false.B
       table.io.wen2 := false.B
     }
     .elsewhen(funct === 4.U){//写表完成，开始检测
       io.asan_valid := false.B
-      asan_io.valid := false.B
+      //asan_io.valid := false.B
       cfg_mask := 1.U
       table.io.wen1 := false.B
       table.io.wen2 := false.B
     }
     .elsewhen(funct === 8.U){//主要程序跑完，结束检测
       io.asan_valid := false.B
-      asan_io.valid := false.B
+      //asan_io.valid := false.B
       cfg_mask := 0.U
       table.io.wen1 := false.B
       table.io.wen2 := false.B
     }
     .elsewhen(funct === 1.U){  //写第一张表
       io.asan_valid := false.B
-      asan_io.valid := false.B
+      //asan_io.valid := false.B
       table.io.wen1 := true.B
       table.io.wen2 := false.B
     }
     .elsewhen(funct === 2.U){  //写第二张表
       io.asan_valid := false.B
-      asan_io.valid := false.B
+      //asan_io.valid := false.B
       table.io.wen1 := false.B
       table.io.wen2 := true.B
     }
     .otherwise{
       io.asan_valid := false.B
-      asan_io.valid := false.B
+      //asan_io.valid := false.B
       table.io.wen1 := false.B
       table.io.wen2 := false.B
     }
   }
   .otherwise{
     io.asan_valid := false.B
-    asan_io.valid := false.B
+    //asan_io.valid := false.B
     table.io.wen1 := false.B
     table.io.wen2 := false.B
   }

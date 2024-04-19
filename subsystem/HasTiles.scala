@@ -195,12 +195,14 @@ trait CanAttachTile {
       context.addr_mid := domain.element.addr_out.get
       context.size_mid := domain.element.size_out.get
       context.valid_mid := domain.element.valid_out.get
+      context.funct_mid := domain.element.funct_out.get
     }
     else if(domain.element.tileId == 1){
       domain.element.ins_tile_in.get := context.ins_tile_mid
       domain.element.addr_in.get := context.addr_mid
       domain.element.size_in.get := context.size_mid
       domain.element.valid_in.get := context.valid_mid
+      domain.element.funct_in.get := context.funct_mid
     }
   }
   //===== zzguardrr: End   ====//

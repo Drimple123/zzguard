@@ -61,6 +61,7 @@ class RoCCCoreIO(val nRoCCCSRs: Int = 0)(implicit p: Parameters) extends CoreBun
   val asan_addr = Output(UInt(40.W))
   val asan_size = Output(UInt(8.W))
   val asan_valid= Output(Bool())
+  val asan_funct= Output(UInt(7.W))
 
 //===== zzguardrrlht: End   ====//
 }

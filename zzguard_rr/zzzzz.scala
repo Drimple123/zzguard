@@ -13,38 +13,51 @@ class Zzzzz_Imp extends Module{
     out_r := out_r + 1.U
     io.out := out_r
 }
-class Zzzzzz_Imp extends Module{
+class Asan_Imp extends Module{
     val io = IO(new Bundle{
         //val in       = Input(UInt(32.W))
         val in_addr  = Input(UInt(40.W))
         val in_size  = Input(UInt(8.W))
+        val in_funct = Input(UInt(7.W))
         val in_valid = Input(Bool())
+
         //val funct    = Input(UInt(5.W))//5是接收初始地址，6是malloc和free访存
 
-        val tag      = Output(UInt(8.W))
-        val out_valid= Output(Bool())
-        val cmd      = Output(UInt(5.W))
-        val out_addr = Output(UInt(40.W))
-        val out_data = Output(UInt(8.W))
+        // val tag      = Output(UInt(8.W))
+        // val out_valid= Output(Bool())
+        // val cmd      = Output(UInt(5.W))
+        // val out_addr = Output(UInt(40.W))
+        // val out_data = Output(UInt(8.W))
 
 
 
         // val out_addr = Output(UInt(32.W))
         // val out_size = Output(UInt(32.W))
-        // val out_vlaid= Output(Bool())
+        val out_valid= Output(Bool())
     })
     dontTouch(io)
-    io.tag := 0.U
-    io.cmd := 0.U
-    io.out_addr := io.in_addr
-    val data_r = RegInit(0.U(8.W))
-    data_r := io.in_size
-    io.out_data := data_r
     when(io.in_valid){
-        io.out_valid := true.B
+        when(io.in_funct === 5.U){
+            io.out_valid := true.B
+        }
+        .otherwise{
+            io.out_valid := false.B
+        }
     }
     .otherwise{
         io.out_valid := false.B
     }
+    // io.tag := 0.U
+    // io.cmd := 0.U
+    // io.out_addr := io.in_addr
+    // val data_r = RegInit(0.U(8.W))
+    // data_r := io.in_size
+    // io.out_data := data_r
+    // when(io.in_valid){
+    //     io.out_valid := true.B
+    // }
+    // .otherwise{
+    //     io.out_valid := false.B
+    // }
 }
 
