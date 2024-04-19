@@ -162,6 +162,9 @@ trait HasRocketCoreIO extends HasRocketCoreParameters {
     val asan_valid = if(tileParams.tileId == 1) Some(Input(Bool())) else None
     val asan_funct = if(tileParams.tileId == 1) Some(Input(UInt(7.W))) else None
 
+    val lors_valid = if(tileParams.tileId == 1) Some(Input(Bool())) else None
+    val lors_addr  = if(tileParams.tileId == 1) Some(Input(UInt(40.W))) else None
+
      //===== zzguardrr: End   ====//
   })
 }
@@ -976,6 +979,9 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
     Asan_core1.io.in_size := io.asan_size.get
     Asan_core1.io.in_valid := io.asan_valid.get
     Asan_core1.io.in_funct := io.asan_funct.get
+
+    Asan_core1.io.lors_valid := io.lors_valid.get
+    Asan_core1.io.lors_addr := io.lors_addr.get
     
     val out_valid_r = RegNext(Asan_core1.io.out_valid, false.B)
     val kill_r = RegInit(true.B)

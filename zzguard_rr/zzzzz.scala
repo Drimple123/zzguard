@@ -13,6 +13,27 @@ class Zzzzz_Imp extends Module{
     out_r := out_r + 1.U
     io.out := out_r
 }
+
+class asan_filter extends Module{
+    val io = IO(new Bundle{
+        val ins     = Input(UInt(32.W))
+        val addr_in = Input(UInt(40.W))
+
+        val lors_valid  = Output(Bool())
+        val addr_out    = Output(UInt(40.W))
+    })
+    dontTouch(io)
+    //io.addr_out := io.addr_in
+    when(io.ins(6,0) === "b0100011".U || io.ins(6,0) === "b0000011".U){
+        io.lors_valid := true.B
+        io.addr_out   := io.addr_in
+    }
+    .otherwise{
+        io.lors_valid := false.B
+        io.addr_out := 0.U
+    }
+}
+
 class Asan_Imp extends Module{
     val io = IO(new Bundle{
         //val in       = Input(UInt(32.W))
@@ -20,6 +41,9 @@ class Asan_Imp extends Module{
         val in_size  = Input(UInt(8.W))
         val in_funct = Input(UInt(7.W))
         val in_valid = Input(Bool())
+
+        val lors_valid = Input(Bool())
+        val lors_addr  = Input(UInt(40.W))
 
         //val funct    = Input(UInt(5.W))//5是接收初始地址，6是malloc和free访存
 

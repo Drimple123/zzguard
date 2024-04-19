@@ -211,11 +211,17 @@ abstract class BaseTile private (crossing: ClockCrossingType, q: Parameters)
   val size_out: Option[BundleBridgeSource[UInt]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[UInt](Some(() => UInt(8.W)))) else None
   val valid_out:Option[BundleBridgeSource[Bool]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[Bool](Some(() => Bool()))) else None
   val funct_out: Option[BundleBridgeSource[UInt]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[UInt](Some(() => UInt(7.W)))) else None
+  val lors_valid_out:Option[BundleBridgeSource[Bool]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[Bool](Some(() => Bool()))) else None
+  val lors_addr_out: Option[BundleBridgeSource[UInt]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[UInt](Some(() => UInt(40.W)))) else None
 
   val addr_in: Option[BundleBridgeSink[UInt]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[UInt](Some(() => UInt(40.W)))) else None
   val size_in: Option[BundleBridgeSink[UInt]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[UInt](Some(() => UInt(8.W)))) else None
   val valid_in:Option[BundleBridgeSink[Bool]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[Bool](Some(() => Bool()))) else None
   val funct_in: Option[BundleBridgeSink[UInt]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[UInt](Some(() => UInt(7.W)))) else None
+  val lors_addr_in: Option[BundleBridgeSink[UInt]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[UInt](Some(() => UInt(40.W)))) else None
+  val lors_valid_in: Option[BundleBridgeSink[Bool]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[Bool](Some(() => Bool()))) else None
+
+
   //===== zzguardrr: End   ====//
 
 

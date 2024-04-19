@@ -173,11 +173,21 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
   if(outer.rocketParams.tileId == 0){
     println("######zzguard###########   tileid: ",outer.rocketParams.tileId,"  ############")
     outer.ins_tile_out.get.bundle := core.io.ins
-
+    //rocc
     outer.addr_out.get.bundle := outer.roccs(0).module.io.asan_addr
     outer.size_out.get.bundle := outer.roccs(0).module.io.asan_size
     outer.valid_out.get.bundle := outer.roccs(0).module.io.asan_valid
     outer.funct_out.get.bundle := outer.roccs(0).module.io.asan_funct
+
+    //asan的小filter，如果ins是load or store ， valid 拉高
+    val asan_filter_1 = Module(new asan_filter)
+    asan_filter_1.io.ins := core.io.ins
+    asan_filter_1.io.addr_in := core.io.mdata
+
+    outer.lors_valid_out.get.bundle := asan_filter_1.io.lors_valid
+    outer.lors_addr_out.get.bundle := asan_filter_1.io.addr_out
+
+
 
   
   }
@@ -190,10 +200,14 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     // zzzzzz_tile1.io.in_size := outer.size_in.get.bundle
     // zzzzzz_tile1.io.in_valid := outer.valid_in.get.bundle
 
+    //rocc
     core.io.asan_addr.get := outer.addr_in.get.bundle
     core.io.asan_size.get := outer.size_in.get.bundle
     core.io.asan_valid.get := outer.valid_in.get.bundle
     core.io.asan_funct.get := outer.funct_in.get.bundle
+    //lors
+    core.io.lors_valid.get := outer.lors_valid_in.get.bundle
+    core.io.lors_addr.get := outer.lors_addr_in.get.bundle
   }
   //===== zzguardrr: End   ====//
 
