@@ -25,7 +25,7 @@ class asan_filter extends Module{
     dontTouch(io)
     //io.addr_out := io.addr_in
     when(io.ins(6,0) === "b0100011".U || io.ins(6,0) === "b0000011".U){
-        when(io.addr_in >= "h8800_0000".U){
+        when(io.addr_in >= "h8800_5100".U && io.addr_in <= "h8800_5120".U){
             io.lors_valid := true.B
             io.addr_out   := io.addr_in
         }
