@@ -4,6 +4,76 @@ import chisel3._
 import chisel3.util._
 
 
+
+class filfo extends Module{
+    val io = IO(new Bundle{
+        val ins     = Input(UInt(32.W))
+        val addr_in = Input(UInt(40.W))
+        val valid_in= Input(Bool())
+
+        val valid_out= Output(Bool())
+        val data    = Output(UInt(40.W))
+        val ready   = Input(Bool())
+    })
+    dontTouch(io)
+    val filter  = Module(new asan_filter)
+    val q       = Module(new Queue(UInt(40.W), 32))
+    val x2one_1 = Module(new x2one(5))
+    dontTouch(q.io)
+    filter.io.ins := io.ins
+    filter.io.addr_in := io.addr_in
+    filter.io.valid_in := io.valid_in
+
+    q.io.enq.valid := filter.io.lors_valid
+    q.io.enq.bits  := filter.io.addr_out
+    
+    q.io.deq.ready := x2one_1.io.ready_0
+    x2one_1.io.valid_0 := q.io.deq.valid
+    x2one_1.io.data_0 := q.io.deq.bits
+
+    io.valid_out := x2one_1.io.valid_1
+    io.data := x2one_1.io.data_1
+    x2one_1.io.ready_1 := io.ready
+
+
+
+}
+
+
+class x2one(x:Int) extends Module{
+    val io = IO(new Bundle{
+        val ready_0 = Output(Bool())
+        val valid_0 = Input(Bool())
+        val data_0  = Input(UInt(40.W))
+
+        val data_1  = Output(UInt(40.W))
+        val ready_1 = Input(Bool())
+        val valid_1 = Output(Bool())
+    })
+    dontTouch(io)
+    val ready_r = RegInit(true.B)
+    val valid_r = RegInit(true.B)
+    val (cnt, yes) = Counter(valid_r, x)
+    
+    io.valid_1 := io.valid_0
+    when(yes){
+        io.ready_0 := true.B
+    }
+    .otherwise{
+        io.ready_0 := false.B
+    }
+
+    when(io.valid_0){
+        valid_r := true.B
+    }
+    .elsewhen(cnt === 0.U){
+        valid_r := false.B
+    }
+    io.data_1 := io.data_0
+
+
+}
+
 class Zzzzz_Imp extends Module{
     val io = IO(new Bundle{
         val out = Output(UInt(1.W))
@@ -18,16 +88,23 @@ class asan_filter extends Module{
     val io = IO(new Bundle{
         val ins     = Input(UInt(32.W))
         val addr_in = Input(UInt(40.W))
+        val valid_in= Input(Bool())
 
         val lors_valid  = Output(Bool())
         val addr_out    = Output(UInt(40.W))
     })
     dontTouch(io)
     //io.addr_out := io.addr_in
-    when(io.ins(6,0) === "b0100011".U || io.ins(6,0) === "b0000011".U){
-        when(io.addr_in >= "h8800_5100".U && io.addr_in <= "h8800_5120".U){
-            io.lors_valid := true.B
-            io.addr_out   := io.addr_in
+    when(io.valid_in){
+        when(io.ins(6,0) === "b0100011".U || io.ins(6,0) === "b0000011".U){
+            when(io.addr_in >= "h0".U && io.addr_in < "h9000_0000".U){
+                io.lors_valid := true.B
+                io.addr_out   := io.addr_in
+            }
+            .otherwise{
+                io.lors_valid := false.B
+                io.addr_out := 0.U
+            }
         }
         .otherwise{
             io.lors_valid := false.B
@@ -38,6 +115,7 @@ class asan_filter extends Module{
         io.lors_valid := false.B
         io.addr_out := 0.U
     }
+    
 }
 
 class Asan_Imp extends Module{
