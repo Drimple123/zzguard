@@ -179,6 +179,7 @@ trait DefaultHierarchicalElementContextType
 
   val lors_valid_mid = BundleBridgeIdentityNode[Bool]()
   val lors_addr_mid = BundleBridgeIdentityNode[UInt]()
+  val lors_ready_mid = BundleBridgeIdentityNode[Bool]()
   //===== zzguardrr: End   ====//
 }
 

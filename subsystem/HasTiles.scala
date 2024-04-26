@@ -199,6 +199,7 @@ trait CanAttachTile {
 
       context.lors_valid_mid := domain.element.lors_valid_out.get
       context.lors_addr_mid := domain.element.lors_addr_out.get
+      domain.element.lors_ready_in.get := context.lors_ready_mid
     }
     else if(domain.element.tileId == 1){
       domain.element.ins_tile_in.get := context.ins_tile_mid
@@ -209,6 +210,7 @@ trait CanAttachTile {
 
       domain.element.lors_valid_in.get := context.lors_valid_mid
       domain.element.lors_addr_in.get := context.lors_addr_mid
+      context.lors_ready_mid := domain.element.lors_ready_out.get
     }
   }
   //===== zzguardrr: End   ====//

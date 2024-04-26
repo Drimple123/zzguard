@@ -157,6 +157,9 @@ trait HasRocketCoreIO extends HasRocketCoreParameters {
     //   val asan_size = Input(UInt(8.W))
     //   val asan_valid= Input(Bool())
     // }
+
+    val ready_stall = if(tileParams.tileId == 0) Some(Input(Bool())) else None
+
     val asan_addr = if(tileParams.tileId == 1) Some(Input(UInt(40.W))) else None
     val asan_size = if(tileParams.tileId == 1) Some(Input(UInt(8.W))) else None
     val asan_valid = if(tileParams.tileId == 1) Some(Input(Bool())) else None
@@ -164,6 +167,8 @@ trait HasRocketCoreIO extends HasRocketCoreParameters {
 
     val lors_valid = if(tileParams.tileId == 1) Some(Input(Bool())) else None
     val lors_addr  = if(tileParams.tileId == 1) Some(Input(UInt(40.W))) else None
+    val ready_out = if(tileParams.tileId == 1) Some(Output(Bool())) else None
+
 
      //===== zzguardrr: End   ====//
   })
@@ -896,7 +901,10 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
   val rocc_blocked = Reg(Bool())
   rocc_blocked := !wb_xcpt && !io.rocc.cmd.ready && (io.rocc.cmd.valid || rocc_blocked)
 
-  val ctrl_stalld =
+  val ctrl_stalld = WireDefault(false.B)
+
+  if(tileParams.tileId == 0){
+     ctrl_stalld :=
     id_ex_hazard || id_mem_hazard || id_wb_hazard || id_sboard_hazard ||
     csr.io.singleStep && (ex_reg_valid || mem_reg_valid || wb_reg_valid) ||
     id_csr_en && csr.io.decode(0).fp_csr && !io.fpu.fcsr_rdy ||
@@ -908,7 +916,24 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
     id_do_fence ||
     csr.io.csr_stall ||
     id_reg_pause ||
-    io.traceStall //|| io.yaofull_counter  //zzguard  counter yaofull了把cpu停住
+    io.traceStall || (~io.ready_stall.get)
+  }
+  else{
+     ctrl_stalld :=
+    id_ex_hazard || id_mem_hazard || id_wb_hazard || id_sboard_hazard ||
+    csr.io.singleStep && (ex_reg_valid || mem_reg_valid || wb_reg_valid) ||
+    id_csr_en && csr.io.decode(0).fp_csr && !io.fpu.fcsr_rdy ||
+    id_ctrl.fp && id_stall_fpu ||
+    id_ctrl.mem && dcache_blocked || // reduce activity during D$ misses
+    id_ctrl.rocc && rocc_blocked || // reduce activity while RoCC is busy
+    id_ctrl.div && (!(div.io.req.ready || (div.io.resp.valid && !wb_wxd)) || div.io.req.valid) || // reduce odds of replay
+    !clock_en ||
+    id_do_fence ||
+    csr.io.csr_stall ||
+    id_reg_pause ||
+    io.traceStall
+  }
+   //|| io.yaofull_counter  //zzguard  counter yaofull了把cpu停住
 
   ctrl_killd := !ibuf.io.inst(0).valid || ibuf.io.inst(0).bits.replay || take_pc_mem_wb || ctrl_stalld || csr.io.interrupt
 
@@ -982,6 +1007,7 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
 
     Asan_core1.io.lors_valid := io.lors_valid.get
     Asan_core1.io.lors_addr := io.lors_addr.get
+    io.ready_out.get := Asan_core1.io.ready_out
     
     val out_valid_r = RegNext(Asan_core1.io.out_valid, false.B)
     val kill_r = RegInit(true.B)

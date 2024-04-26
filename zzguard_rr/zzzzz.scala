@@ -10,6 +10,7 @@ class filfo extends Module{
         val ins     = Input(UInt(32.W))
         val addr_in = Input(UInt(40.W))
         val valid_in= Input(Bool())
+        val ready_stall= Output(Bool())
 
         val valid_out= Output(Bool())
         val data    = Output(UInt(40.W))
@@ -23,6 +24,7 @@ class filfo extends Module{
     filter.io.ins := io.ins
     filter.io.addr_in := io.addr_in
     filter.io.valid_in := io.valid_in
+    io.ready_stall := q.io.enq.ready
 
     q.io.enq.valid := filter.io.lors_valid
     q.io.enq.bits  := filter.io.addr_out
@@ -55,8 +57,8 @@ class x2one(x:Int) extends Module{
     val valid_r = RegInit(true.B)
     val (cnt, yes) = Counter(valid_r, x)
     
-    io.valid_1 := io.valid_0
-    when(yes){
+    io.valid_1 := io.valid_0 && io.ready_0
+    when(yes && io.ready_1){
         io.ready_0 := true.B
     }
     .otherwise{
@@ -129,6 +131,7 @@ class Asan_Imp extends Module{
         //core0
         val lors_valid = Input(Bool())
         val lors_addr  = Input(UInt(40.W))
+        val ready_out  = Output(Bool())
 
         //val funct    = Input(UInt(5.W))//5是接收初始地址，6是malloc和free访存
 
@@ -167,6 +170,7 @@ class Asan_Imp extends Module{
     val q = Module(new Queue(UInt(40.W),32))
     q.io.enq.bits := io.lors_addr
     q.io.enq.valid := io.lors_valid && mask
+    io.ready_out := q.io.enq.ready
 
     //在接收到一个信号之后，去访存，信号回来之前应该把ready拉低
     when(q.io.deq.valid){

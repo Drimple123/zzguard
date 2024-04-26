@@ -193,9 +193,10 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     filfo_1.io.ins := core.io.ins
     filfo_1.io.addr_in := core.io.mdata
     filfo_1.io.valid_in := core.io.valid
-    filfo_1.io.ready := true.B
     outer.lors_valid_out.get.bundle := filfo_1.io.valid_out
     outer.lors_addr_out.get.bundle := filfo_1.io.data
+    core.io.ready_stall.get := filfo_1.io.ready_stall
+    filfo_1.io.ready := outer.lors_ready_in.get.bundle
 
 
 
@@ -217,13 +218,17 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     core.io.asan_valid.get := outer.valid_in.get.bundle
     core.io.asan_funct.get := outer.funct_in.get.bundle
     //lors
-    val q = Module(new Queue(UInt(40.W),32))
-    q.io.enq.valid := outer.lors_valid_in.get.bundle
-    q.io.enq.bits := outer.lors_addr_in.get.bundle
-    q.io.deq.ready := true.B
+    // val q = Module(new Queue(UInt(40.W),32))
+    // q.io.enq.valid := outer.lors_valid_in.get.bundle
+    // q.io.enq.bits := outer.lors_addr_in.get.bundle
+    // q.io.deq.ready := true.B
+    // outer.lors_ready_out.get.bundle := q.io.enq.ready
 
     core.io.lors_valid.get := outer.lors_valid_in.get.bundle
     core.io.lors_addr.get := outer.lors_addr_in.get.bundle
+    outer.lors_ready_out.get.bundle := core.io.ready_out.get
+
+    
   }
   //===== zzguardrr: End   ====//
 
