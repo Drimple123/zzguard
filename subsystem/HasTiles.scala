@@ -192,25 +192,40 @@ trait CanAttachTile {
     implicit val p = context.p
     if(domain.element.tileId == 0){
       context.ins_tile_mid := domain.element.ins_tile_out.get
-      context.addr_mid := domain.element.addr_out.get
-      context.size_mid := domain.element.size_out.get
-      context.valid_mid := domain.element.valid_out.get
-      context.funct_mid := domain.element.funct_out.get
+      // context.addr_mid := domain.element.addr_out.get
+      // context.size_mid := domain.element.size_out.get
+      // context.valid_mid := domain.element.valid_out.get
+      // context.funct_mid := domain.element.funct_out.get
+      for(i<-0 to 3){
+        context.data_bits_mid(i) := domain.element.data_bits_out_nodes.get(i)
+        context.data_valid_mid(i) := domain.element.data_valid_out_nodes.get(i)
+        domain.element.data_ready_in_nodes.get(i) := context.data_ready_mid(i)
+      }
+      context.rocc_bits_mid := domain.element.rocc_bits_out.get
+      context.rocc_valid_mid := domain.element.rocc_valid_out.get
+      domain.element.rocc_ready_in.get := context.rocc_ready_mid
 
-      context.lors_valid_mid := domain.element.lors_valid_out.get
-      context.lors_addr_mid := domain.element.lors_addr_out.get
-      domain.element.lors_ready_in.get := context.lors_ready_mid
+      // context.lors_valid_mid := domain.element.lors_valid_out.get
+      // context.lors_addr_mid := domain.element.lors_addr_out.get
+      // domain.element.lors_ready_in.get := context.lors_ready_mid
     }
     else if(domain.element.tileId == 1){
       domain.element.ins_tile_in.get := context.ins_tile_mid
-      domain.element.addr_in.get := context.addr_mid
-      domain.element.size_in.get := context.size_mid
-      domain.element.valid_in.get := context.valid_mid
-      domain.element.funct_in.get := context.funct_mid
+      // domain.element.addr_in.get := context.addr_mid
+      // domain.element.size_in.get := context.size_mid
+      // domain.element.valid_in.get := context.valid_mid
+      // domain.element.funct_in.get := context.funct_mid
+      for(i<-0 to 3){
+        domain.element.data_bits_in_nodes.get(i) := context.data_bits_mid(i)
+        domain.element.data_valid_in_nodes.get(i) := context.data_valid_mid(i)
+        context.data_ready_mid(i) := domain.element.data_ready_out_nodes.get(i)
 
-      domain.element.lors_valid_in.get := context.lors_valid_mid
-      domain.element.lors_addr_in.get := context.lors_addr_mid
-      context.lors_ready_mid := domain.element.lors_ready_out.get
+      }
+      domain.element.rocc_bits_in.get := context.rocc_bits_mid
+      domain.element.rocc_valid_in.get := context.rocc_valid_mid
+      context.rocc_ready_mid := domain.element.rocc_ready_out.get
+      
+      
     }
   }
   //===== zzguardrr: End   ====//

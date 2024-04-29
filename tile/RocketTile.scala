@@ -165,38 +165,53 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
   val core = Module(new Rocket(outer)(outer.p))
 
   //===== zzguardrr: Start ====//
-  core.io.rocc.asan_addr := 0.U
-  core.io.rocc.asan_size := 0.U
-  core.io.rocc.asan_valid := true.B
-  core.io.rocc.asan_funct := 0.U
+  //给rocc模块加io的,被迫加到了coreio上，给它填上，免得作妖
+  val fill_dataIO = VecInit(Seq.fill(4)(Module(new fill_laji_io(160)).io))
+  for(i<-0 to 3){
+    core.io.rocc.fifo_io(i) <> fill_dataIO(i).deq
+  }
+
+  val fill_asanIO = Module(new fill_laji_io(55))
+  core.io.rocc.asan_io <> fill_asanIO.io.deq
+  core.io.rocc.fifo_ready := false.B
 
   if(outer.rocketParams.tileId == 0){
     println("######zzguard###########   tileid: ",outer.rocketParams.tileId,"  ############")
     outer.ins_tile_out.get.bundle := core.io.ins
     //rocc
-    outer.addr_out.get.bundle := outer.roccs(0).module.io.asan_addr
-    outer.size_out.get.bundle := outer.roccs(0).module.io.asan_size
-    outer.valid_out.get.bundle := outer.roccs(0).module.io.asan_valid
-    outer.funct_out.get.bundle := outer.roccs(0).module.io.asan_funct
+    // outer.addr_out.get.bundle := outer.roccs(0).module.io.asan_addr
+    // outer.size_out.get.bundle := outer.roccs(0).module.io.asan_size
+    // outer.valid_out.get.bundle := outer.roccs(0).module.io.asan_valid
+    // outer.funct_out.get.bundle := outer.roccs(0).module.io.asan_funct
+    for(i<-0 to 3){
+      outer.data_bits_out_nodes.get(i).bundle:= outer.roccs(0).module.io.fifo_io(i).bits
+      outer.data_valid_out_nodes.get(i).bundle:= outer.roccs(0).module.io.fifo_io(i).valid
+      outer.roccs(0).module.io.fifo_io(i).ready := outer.data_ready_in_nodes.get(i).bundle
+
+    }
+    core.io.ready_stall.get := outer.roccs(0).module.io.fifo_ready
+    outer.rocc_bits_out.get.bundle := outer.roccs(0).module.io.asan_io.bits
+    outer.rocc_valid_out.get.bundle := outer.roccs(0).module.io.asan_io.valid
+    outer.roccs(0).module.io.asan_io.ready := outer.rocc_ready_in.get.bundle
 
     //asan的小filter，如果ins是load or store ， valid 拉高
-    val asan_filter_1 = Module(new asan_filter)
-    asan_filter_1.io.ins := core.io.ins
-    asan_filter_1.io.addr_in := core.io.mdata
-    asan_filter_1.io.valid_in := core.io.valid
+    // val asan_filter_1 = Module(new asan_filter)
+    // asan_filter_1.io.ins := core.io.ins
+    // asan_filter_1.io.addr_in := core.io.mdata
+    // asan_filter_1.io.valid_in := core.io.valid
 
     // outer.lors_valid_out.get.bundle := asan_filter_1.io.lors_valid
     // outer.lors_addr_out.get.bundle := asan_filter_1.io.addr_out
     
 
-    val filfo_1 = Module(new filfo)
-    filfo_1.io.ins := core.io.ins
-    filfo_1.io.addr_in := core.io.mdata
-    filfo_1.io.valid_in := core.io.valid
-    outer.lors_valid_out.get.bundle := filfo_1.io.valid_out
-    outer.lors_addr_out.get.bundle := filfo_1.io.data
-    core.io.ready_stall.get := filfo_1.io.ready_stall
-    filfo_1.io.ready := outer.lors_ready_in.get.bundle
+    // val filfo_1 = Module(new filfo)
+    // filfo_1.io.ins := core.io.ins
+    // filfo_1.io.addr_in := core.io.mdata
+    // filfo_1.io.valid_in := core.io.valid
+    // outer.lors_valid_out.get.bundle := filfo_1.io.valid_out
+    // outer.lors_addr_out.get.bundle := filfo_1.io.data
+    // core.io.ready_stall.get := filfo_1.io.ready_stall
+    // filfo_1.io.ready := outer.lors_ready_in.get.bundle
 
 
 
@@ -213,20 +228,47 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     // zzzzzz_tile1.io.in_valid := outer.valid_in.get.bundle
 
     //rocc
-    core.io.asan_addr.get := outer.addr_in.get.bundle
-    core.io.asan_size.get := outer.size_in.get.bundle
-    core.io.asan_valid.get := outer.valid_in.get.bundle
-    core.io.asan_funct.get := outer.funct_in.get.bundle
-    //lors
+    // core.io.asan_addr.get := outer.addr_in.get.bundle
+    // core.io.asan_size.get := outer.size_in.get.bundle
+    // core.io.asan_valid.get := outer.valid_in.get.bundle
+    // core.io.asan_funct.get := outer.funct_in.get.bundle
+    // //lors
     // val q = Module(new Queue(UInt(40.W),32))
     // q.io.enq.valid := outer.lors_valid_in.get.bundle
     // q.io.enq.bits := outer.lors_addr_in.get.bundle
     // q.io.deq.ready := true.B
     // outer.lors_ready_out.get.bundle := q.io.enq.ready
 
-    core.io.lors_valid.get := outer.lors_valid_in.get.bundle
-    core.io.lors_addr.get := outer.lors_addr_in.get.bundle
-    outer.lors_ready_out.get.bundle := core.io.ready_out.get
+    // core.io.lors_valid.get := outer.lors_valid_in.get.bundle
+    // core.io.lors_addr.get := outer.lors_addr_in.get.bundle
+    //outer.lors_ready_out.get.bundle := core.io.ready_out.get
+
+    val q = VecInit(Seq.fill(4)(Module(new Queue(UInt(160.W), 32)).io))
+    for(i<-0 to 3){
+      dontTouch(q(i).deq)
+    }
+    for(i<-0 to 3){
+      q(i).enq.bits := outer.data_bits_in_nodes.get(i).bundle
+      q(i).enq.valid := outer.data_valid_in_nodes.get(i).bundle
+      outer.data_ready_out_nodes.get(i).bundle := q(i).enq.ready
+
+      q(i).deq.ready := true.B
+    }
+
+    val q_rocc = Module(new Queue(UInt(55.W),16))
+    q_rocc.io.enq.bits  := outer.rocc_bits_in.get.bundle
+    q_rocc.io.enq.valid := outer.rocc_valid_in.get.bundle
+    outer.rocc_ready_out.get.bundle := q_rocc.io.enq.ready
+    q_rocc.io.deq.ready := true.B
+
+    //填上tile1的不要的zzguard的ready口
+    outer.roccs(0).module.io.asan_io.ready := false.B
+    for(i<-0 to 3){
+      outer.roccs(0).module.io.fifo_io(i).ready := false.B
+    }
+
+    
+
 
     
   }

@@ -172,14 +172,17 @@ trait DefaultHierarchicalElementContextType
 
   //===== zzguardrr: Start ====//
   val ins_tile_mid = BundleBridgeIdentityNode[UInt]()
-  val addr_mid  = BundleBridgeIdentityNode[UInt]()
-  val size_mid  = BundleBridgeIdentityNode[UInt]()
-  val valid_mid = BundleBridgeIdentityNode[Bool]()
-  val funct_mid = BundleBridgeIdentityNode[UInt]()
+  // val addr_mid  = BundleBridgeIdentityNode[UInt]()
+  // val size_mid  = BundleBridgeIdentityNode[UInt]()
+  // val valid_mid = BundleBridgeIdentityNode[Bool]()
+  // val funct_mid = BundleBridgeIdentityNode[UInt]()
+  val data_bits_mid = Seq.fill(4)(BundleBridgeIdentityNode[UInt]())
+  val data_valid_mid = Seq.fill(4)(BundleBridgeIdentityNode[Bool]())
+  val data_ready_mid = Seq.fill(4)(BundleBridgeIdentityNode[Bool]())
 
-  val lors_valid_mid = BundleBridgeIdentityNode[Bool]()
-  val lors_addr_mid = BundleBridgeIdentityNode[UInt]()
-  val lors_ready_mid = BundleBridgeIdentityNode[Bool]()
+  val rocc_valid_mid = BundleBridgeIdentityNode[Bool]()
+  val rocc_bits_mid = BundleBridgeIdentityNode[UInt]()
+  val rocc_ready_mid = BundleBridgeIdentityNode[Bool]()
   //===== zzguardrr: End   ====//
 }
 

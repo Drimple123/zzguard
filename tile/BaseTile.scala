@@ -207,23 +207,58 @@ abstract class BaseTile private (crossing: ClockCrossingType, q: Parameters)
   val ins_tile_out: Option[BundleBridgeSource[UInt]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[UInt](Some(() => UInt(32.W)))) else None
   val ins_tile_in: Option[BundleBridgeSink[UInt]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[UInt](Some(() => UInt(32.W)))) else None
 
-  val addr_out: Option[BundleBridgeSource[UInt]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[UInt](Some(() => UInt(40.W)))) else None
-  val size_out: Option[BundleBridgeSource[UInt]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[UInt](Some(() => UInt(8.W)))) else None
-  val valid_out:Option[BundleBridgeSource[Bool]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[Bool](Some(() => Bool()))) else None
-  val funct_out: Option[BundleBridgeSource[UInt]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[UInt](Some(() => UInt(7.W)))) else None
-  val lors_valid_out:Option[BundleBridgeSource[Bool]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[Bool](Some(() => Bool()))) else None
-  val lors_addr_out: Option[BundleBridgeSource[UInt]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[UInt](Some(() => UInt(40.W)))) else None
-  val lors_ready_in: Option[BundleBridgeSink[Bool]] = if(tileParams.tileId == 0) Some(BundleBridgeSink[Bool](Some(() => Bool()))) else None
+  val rocc_bits_out: Option[BundleBridgeSource[UInt]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[UInt](Some(() => UInt(55.W)))) else None
+  val rocc_valid_out:Option[BundleBridgeSource[Bool]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[Bool](Some(() => Bool()))) else None
+  val rocc_ready_in:Option[BundleBridgeSink[Bool]] = if(tileParams.tileId == 0) Some(BundleBridgeSink[Bool](Some(() => Bool()))) else None
 
+  // val funct_out: Option[BundleBridgeSource[UInt]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[UInt](Some(() => UInt(7.W)))) else None
+  // val lors_valid_out:Option[BundleBridgeSource[Bool]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[Bool](Some(() => Bool()))) else None
+  // val lors_addr_out: Option[BundleBridgeSource[UInt]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[UInt](Some(() => UInt(40.W)))) else None
+  // val lors_ready_in: Option[BundleBridgeSink[Bool]] = if(tileParams.tileId == 0) Some(BundleBridgeSink[Bool](Some(() => Bool()))) else None
+  
+  // val addr_in: Option[BundleBridgeSink[UInt]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[UInt](Some(() => UInt(40.W)))) else None
+  // val size_in: Option[BundleBridgeSink[UInt]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[UInt](Some(() => UInt(8.W)))) else None
+  // val valid_in:Option[BundleBridgeSink[Bool]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[Bool](Some(() => Bool()))) else None
+  // val funct_in: Option[BundleBridgeSink[UInt]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[UInt](Some(() => UInt(7.W)))) else None
+  val rocc_bits_in: Option[BundleBridgeSink[UInt]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[UInt](Some(() => UInt(55.W)))) else None
+  val rocc_valid_in: Option[BundleBridgeSink[Bool]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[Bool](Some(() => Bool()))) else None
+  val rocc_ready_out: Option[BundleBridgeSource[Bool]] = if(tileParams.tileId == 1) Some(BundleBridgeSource[Bool](Some(() => Bool()))) else None
 
-  val addr_in: Option[BundleBridgeSink[UInt]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[UInt](Some(() => UInt(40.W)))) else None
-  val size_in: Option[BundleBridgeSink[UInt]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[UInt](Some(() => UInt(8.W)))) else None
-  val valid_in:Option[BundleBridgeSink[Bool]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[Bool](Some(() => Bool()))) else None
-  val funct_in: Option[BundleBridgeSink[UInt]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[UInt](Some(() => UInt(7.W)))) else None
-  val lors_addr_in: Option[BundleBridgeSink[UInt]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[UInt](Some(() => UInt(40.W)))) else None
-  val lors_valid_in: Option[BundleBridgeSink[Bool]] = if(tileParams.tileId == 1) Some(BundleBridgeSink[Bool](Some(() => Bool()))) else None
-  val lors_ready_out: Option[BundleBridgeSource[Bool]] = if(tileParams.tileId == 1) Some(BundleBridgeSource[Bool](Some(() => Bool()))) else None
+  // val data_bits: Option[SeqBundleBridgeSource[UInt]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[UInt](Some(() => UInt(160.W)))) else None
+  // val data_valid: Option[BundleBridgeSource[Bool]] = if(tileParams.tileId == 0) Some(BundleBridgeSource[Bool](Some(() => Bool()))) else None
+  // val data_ready: Option[BundleBridgeSink[Bool]] = if(tileParams.tileId == 0) Some(BundleBridgeSink[Bool](Some(() => Bool()))) else None
+  val data_bits_out_nodes: Option[Seq[BundleBridgeSource[UInt]]] = if(tileParams.tileId == 0)
+                                                          Some(Seq.fill(4)(BundleBridgeSource[UInt](Some(() => UInt(160.W)))))
+                                                        else
+                                                          None
+  val data_valid_out_nodes: Option[Seq[BundleBridgeSource[Bool]]] = if(tileParams.tileId == 0)
+                                                          Some(Seq.fill(4)(BundleBridgeSource[Bool](Some(() => Bool()))))
+                                                        else
+                                                          None
+  val data_ready_in_nodes: Option[Seq[BundleBridgeSink[Bool]]] = if(tileParams.tileId == 0)
+                                                          Some(Seq.fill(4)(BundleBridgeSink[Bool](Some(() => Bool()))))
+                                                        else
+                                                          None
 
+  val data_bits_in_nodes: Option[Seq[BundleBridgeSink[UInt]]] = if(tileParams.tileId == 1)
+                                                          Some(Seq.fill(4)(BundleBridgeSink[UInt](Some(() => UInt(160.W)))))
+                                                        else
+                                                          None
+  val data_valid_in_nodes: Option[Seq[BundleBridgeSink[Bool]]] = if(tileParams.tileId == 1)
+                                                          Some(Seq.fill(4)(BundleBridgeSink[Bool](Some(() => Bool()))))
+                                                        else
+                                                          None
+  val data_ready_out_nodes: Option[Seq[BundleBridgeSource[Bool]]] = if(tileParams.tileId == 1)
+                                                          Some(Seq.fill(4)(BundleBridgeSource[Bool](Some(() => Bool()))))
+                                                        else
+                                                          None 
+  
+
+                                                          
+  // val data_valid_nodes: Option[Seq[BundleBridgeSource[UInt]]] = if(tileParams.tileId == 0)
+  //                                                         Some(Seq.fill(4)(BundleBridgeSource[UInt](Some(() => UInt(160.W)))))
+  //                                                       else
+  //                                                         None
 
   //===== zzguardrr: End   ====//
 

@@ -76,6 +76,28 @@ class x2one(x:Int) extends Module{
 
 }
 
+class fifox(depth: Int, x: Int) extends Module{
+    val io = IO(new Bundle{
+       val in   = Flipped(Decoupled(UInt(160.W)))
+       val out  = Decoupled(UInt(160.W))
+    })
+    dontTouch(io)
+    val q = Module(new Queue(UInt(160.W), depth))
+    q.io.enq <> io.in
+
+    val (cnt, yes) = Counter(true.B, x);
+
+    io.out.bits := q.io.deq.bits
+    when(cnt === 0.U){
+        io.out.valid := q.io.deq.valid
+        q.io.deq.ready := io.out.ready
+    }
+    .otherwise{
+        io.out.valid := false.B
+        q.io.deq.ready := false.B
+    }
+}
+
 class Zzzzz_Imp extends Module{
     val io = IO(new Bundle{
         val out = Output(UInt(1.W))

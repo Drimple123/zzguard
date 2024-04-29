@@ -58,10 +58,14 @@ class RoCCCoreIO(val nRoCCCSRs: Int = 0)(implicit p: Parameters) extends CoreBun
   val yaofull_counter_out = Output(Bool())
 
   //传到另一个核
-  val asan_addr = Output(UInt(40.W))
-  val asan_size = Output(UInt(8.W))
-  val asan_valid= Output(Bool())
-  val asan_funct= Output(UInt(7.W))
+  // val asan_addr = Output(UInt(40.W))
+  // val asan_size = Output(UInt(8.W))
+  // val asan_valid= Output(Bool())
+  // val asan_funct= Output(UInt(7.W))
+  val asan_io = Decoupled(UInt(55.W))
+  //val fifo_ready = Output(Vec(4,Bool()))
+  val fifo_ready = Output(Bool())
+  val fifo_io = Vec(4, Decoupled(UInt(160.W)))
 
 //===== zzguardrrlht: End   ====//
 }

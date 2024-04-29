@@ -390,12 +390,12 @@ class WithHypervisor(hext: Boolean = true) extends Config((site, here, up) => {
 })
 
 
-class WithzzguardrrRoCC extends Config((site, here, up) => {
+class WithzzguardRoCC extends Config((site, here, up) => {
   case BuildRoCC => List(
 
     (p: Parameters) => {
-        val zzguardrrAcce = LazyModule(new zzguardrr_ram(OpcodeSet.custom0)(p))
-        zzguardrrAcce
+        val zzguard = LazyModule(new zzguardrr_ram_new(OpcodeSet.custom0)(p))
+        zzguard
     }
 
   ) 

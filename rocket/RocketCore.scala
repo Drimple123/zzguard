@@ -159,15 +159,16 @@ trait HasRocketCoreIO extends HasRocketCoreParameters {
     // }
 
     val ready_stall = if(tileParams.tileId == 0) Some(Input(Bool())) else None
+    
 
-    val asan_addr = if(tileParams.tileId == 1) Some(Input(UInt(40.W))) else None
-    val asan_size = if(tileParams.tileId == 1) Some(Input(UInt(8.W))) else None
-    val asan_valid = if(tileParams.tileId == 1) Some(Input(Bool())) else None
-    val asan_funct = if(tileParams.tileId == 1) Some(Input(UInt(7.W))) else None
+    // val asan_addr = if(tileParams.tileId == 1) Some(Input(UInt(40.W))) else None
+    // val asan_size = if(tileParams.tileId == 1) Some(Input(UInt(8.W))) else None
+    // val asan_valid = if(tileParams.tileId == 1) Some(Input(Bool())) else None
+    // val asan_funct = if(tileParams.tileId == 1) Some(Input(UInt(7.W))) else None
 
-    val lors_valid = if(tileParams.tileId == 1) Some(Input(Bool())) else None
-    val lors_addr  = if(tileParams.tileId == 1) Some(Input(UInt(40.W))) else None
-    val ready_out = if(tileParams.tileId == 1) Some(Output(Bool())) else None
+    // val lors_valid = if(tileParams.tileId == 1) Some(Input(Bool())) else None
+    // val lors_addr  = if(tileParams.tileId == 1) Some(Input(UInt(40.W))) else None
+    // val ready_out = if(tileParams.tileId == 1) Some(Output(Bool())) else None
 
 
      //===== zzguardrr: End   ====//
@@ -903,6 +904,12 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
 
   val ctrl_stalld = WireDefault(false.B)
 
+
+  //zzguard
+  io.rocc.asan_io.ready := false.B//给rocc模块加io的,被迫加到了coreio上，给它填上，免得作妖
+  for(i<-0 to 3){
+    io.rocc.fifo_io(i).ready := false.B
+  }
   if(tileParams.tileId == 0){
      ctrl_stalld :=
     id_ex_hazard || id_mem_hazard || id_wb_hazard || id_sboard_hazard ||
@@ -999,39 +1006,39 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
   //zzguard:start
   if(tileParams.tileId == 1){
   
-    val Asan_core1 = Module(new Asan_Imp)
-    Asan_core1.io.in_addr := io.asan_addr.get
-    Asan_core1.io.in_size := io.asan_size.get
-    Asan_core1.io.in_valid := io.asan_valid.get
-    Asan_core1.io.in_funct := io.asan_funct.get
+    // val Asan_core1 = Module(new Asan_Imp)
+    // Asan_core1.io.in_addr := io.asan_addr.get
+    // Asan_core1.io.in_size := io.asan_size.get
+    // Asan_core1.io.in_valid := io.asan_valid.get
+    // Asan_core1.io.in_funct := io.asan_funct.get
 
-    Asan_core1.io.lors_valid := io.lors_valid.get
-    Asan_core1.io.lors_addr := io.lors_addr.get
-    io.ready_out.get := Asan_core1.io.ready_out
+    // Asan_core1.io.lors_valid := io.lors_valid.get
+    // Asan_core1.io.lors_addr := io.lors_addr.get
+    // io.ready_out.get := Asan_core1.io.ready_out
     
-    val out_valid_r = RegNext(Asan_core1.io.out_valid, false.B)
-    val kill_r = RegInit(true.B)
-    when(Asan_core1.io.out_valid){
-      kill_r := false.B
-    }
+    // val out_valid_r = RegNext(Asan_core1.io.out_valid, false.B)
+    // val kill_r = RegInit(true.B)
+    // when(Asan_core1.io.out_valid){
+    //   kill_r := false.B
+    // }
 
-    // io.dmem.req.valid     := ex_reg_valid && ex_ctrl.mem
-    // io.dmem.req.bits.tag  := ex_dcache_tag
-    // io.dmem.req.bits.cmd  := ex_ctrl.mem_cmd
-    // io.dmem.req.bits.addr := encodeVirtualAddress(ex_rs(0), alu.io.adder_out)
-    // io.dmem.s1_data.data := (if (fLen == 0) mem_reg_rs2 else Mux(mem_ctrl.fp, Fill((xLen max fLen) / fLen, io.fpu.store_data), mem_reg_rs2))
-    // io.dmem.req.bits.size := ex_reg_mem_size
-    // io.dmem.s1_kill := killm_common || mem_ldst_xcpt || fpu_kill_mem
-    io.dmem.req.valid     := Mux(Asan_core1.io.out_valid, true.B, ex_reg_valid && ex_ctrl.mem)
-    io.dmem.req.bits.tag  := Mux(Asan_core1.io.out_valid, 0.U, ex_dcache_tag)
-    io.dmem.req.bits.cmd  := Mux(Asan_core1.io.out_valid, Asan_core1.io.cmd, ex_ctrl.mem_cmd)
-    io.dmem.req.bits.addr := Mux(Asan_core1.io.out_valid, Asan_core1.io.out_addr, encodeVirtualAddress(ex_rs(0), alu.io.adder_out))
-    io.dmem.s1_data.data  := Mux(out_valid_r, Asan_core1.io.out_data, (if (fLen == 0) mem_reg_rs2 else Mux(mem_ctrl.fp, Fill((xLen max fLen) / fLen, io.fpu.store_data), mem_reg_rs2)))
-    io.dmem.req.bits.size := Mux(Asan_core1.io.out_valid, 0.U, ex_reg_mem_size)
-    io.dmem.s1_kill       := kill_r &&(killm_common || mem_ldst_xcpt || fpu_kill_mem)
+    io.dmem.req.valid     := ex_reg_valid && ex_ctrl.mem
+    io.dmem.req.bits.tag  := ex_dcache_tag
+    io.dmem.req.bits.cmd  := ex_ctrl.mem_cmd
+    io.dmem.req.bits.addr := encodeVirtualAddress(ex_rs(0), alu.io.adder_out)
+    io.dmem.s1_data.data := (if (fLen == 0) mem_reg_rs2 else Mux(mem_ctrl.fp, Fill((xLen max fLen) / fLen, io.fpu.store_data), mem_reg_rs2))
+    io.dmem.req.bits.size := ex_reg_mem_size
+    io.dmem.s1_kill := killm_common || mem_ldst_xcpt || fpu_kill_mem
+    // io.dmem.req.valid     := Mux(Asan_core1.io.out_valid, true.B, ex_reg_valid && ex_ctrl.mem)
+    // io.dmem.req.bits.tag  := Mux(Asan_core1.io.out_valid, 0.U, ex_dcache_tag)
+    // io.dmem.req.bits.cmd  := Mux(Asan_core1.io.out_valid, Asan_core1.io.cmd, ex_ctrl.mem_cmd)
+    // io.dmem.req.bits.addr := Mux(Asan_core1.io.out_valid, Asan_core1.io.out_addr, encodeVirtualAddress(ex_rs(0), alu.io.adder_out))
+    // io.dmem.s1_data.data  := Mux(out_valid_r, Asan_core1.io.out_data, (if (fLen == 0) mem_reg_rs2 else Mux(mem_ctrl.fp, Fill((xLen max fLen) / fLen, io.fpu.store_data), mem_reg_rs2)))
+    // io.dmem.req.bits.size := Mux(Asan_core1.io.out_valid, 0.U, ex_reg_mem_size)
+    // io.dmem.s1_kill       := kill_r &&(killm_common || mem_ldst_xcpt || fpu_kill_mem)
 
-    Asan_core1.io.valid_mem := io.dmem.resp.valid || io.dmem.perf.grant
-    Asan_core1.io.data_in := io.dmem.resp.bits.data(7,0)
+    // Asan_core1.io.valid_mem := io.dmem.resp.valid || io.dmem.perf.grant
+    // Asan_core1.io.data_in := io.dmem.resp.bits.data(7,0)
   }
   else if(tileParams.tileId == 0)
   {

@@ -103,7 +103,7 @@ class zzguardrr extends Module{
     q(i).clk_r := clk_div.io.clk_out
 
     q(i).wdata     := cat.io.out
-    cat.io.ready   := !(q(i).full)  //ready的接法不对，要改，感觉不能两个接一个
+    //cat.io.ready   := !(q(i).full)  //ready的接法不对，要改，感觉不能两个接一个
     when(valid_r){
       when(bitmap(i) === 1.U){
         q(i).wen := true.B
