@@ -76,13 +76,13 @@ class x2one(x:Int) extends Module{
 
 }
 
-class fifox(depth: Int, x: Int) extends Module{
+class fifox(width: Int, depth: Int, x: Int) extends Module{
     val io = IO(new Bundle{
-       val in   = Flipped(Decoupled(UInt(160.W)))
-       val out  = Decoupled(UInt(160.W))
+       val in   = Flipped(Decoupled(UInt(width.W)))
+       val out  = Decoupled(UInt(width.W))
     })
     dontTouch(io)
-    val q = Module(new Queue(UInt(160.W), depth))
+    val q = Module(new Queue(UInt(width.W), depth))
     q.io.enq <> io.in
 
     val (cnt, yes) = Counter(true.B, x);

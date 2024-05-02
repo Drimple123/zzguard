@@ -42,7 +42,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   val packet_mid  = Wire(UInt(48.W))
   packet_mid := Cat(cmd.bits.rs1(39,0), cmd.bits.rs2(7,0))
   rocc_packet := Cat(packet_mid, cmd.bits.inst.funct)
-  val q_rocc = Module(new fifox(32, 5))
+  val q_rocc = Module(new fifox(55, 32, 5))
   q_rocc.io.in.bits := rocc_packet
   io.asan_io <> q_rocc.io.out
 
@@ -72,6 +72,9 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   val valid_r = RegNext(valid,false.B)
 
   val table = Module(new look_2table_ram(4))
+  table.io.ren1 := valid
+  table.io.ren2 := valid_r
+
   table.io.opcode   := din_ins(6,0)
   table.io.addr1    := rs1_val
   table.io.addr2    := rs1_val
@@ -134,7 +137,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
 
 
   //val q = VecInit(Seq.fill(2)(Module(new asyncfifo(16, 160)).io))
-  val q = VecInit(Seq.fill(4)(Module(new fifox(32, 5)).io))
+  val q = VecInit(Seq.fill(4)(Module(new fifox(160, 32, 5)).io))
   
   //只要有一个不ready，就把主核stall住
   io.fifo_ready := q(0).in.ready && q(1).in.ready && q(2).in.ready && q(3).in.ready

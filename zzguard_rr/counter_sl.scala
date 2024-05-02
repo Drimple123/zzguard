@@ -42,3 +42,32 @@ class counter_sl extends Module{
 
 }
 
+class counter_losuan extends Module{
+  val io = IO(new Bundle{
+    // val valid         = Input(Bool())
+    // val din           = Input(UInt(160.W))
+    // val ready         = Output(Bool())
+    val enq           = Flipped(Decoupled(UInt(160.W)))
+    val number_losuan = Output(UInt(20.W))
+  })
+  //信号被优化，用下dontTouch
+    dontTouch(io)
+
+    io.enq.ready := true.B
+
+    val number_losuan_r  = RegInit(0.U(20.W))
+
+    when(io.enq.fire){
+     number_losuan_r := number_losuan_r + 1.U
+    }
+
+    io.number_losuan := number_losuan_r
+
+    // val dout_r = RegInit(0.U(104.W))
+
+    // dout_r := io.din
+    
+    // io.dout := dout_r
+
+}
+

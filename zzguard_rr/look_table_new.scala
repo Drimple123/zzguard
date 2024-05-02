@@ -14,8 +14,9 @@ class look_table1(width: Int) extends Module{
   })
 
   val table = SyncReadMem(128,UInt(width.W))
-
-  io.bitmap := table.read(io.opcode,io.ren)
+  val bitmap_w = WireDefault(0.U(width.W))
+  bitmap_w := table.read(io.opcode,io.ren)
+  io.bitmap := bitmap_w
   when(io.wen === true.B){
     table.write(io.addr,io.data_in)
   }
@@ -59,6 +60,9 @@ class look_2table_ram(width: Int) extends Module {
     val opcode    = Input(UInt(7.W))
     val sel       = Output(UInt(2.W))
     val bitmap    = Output(UInt(width.W))
+    
+    val ren1      = Input(Bool())
+    val ren2      = Input(Bool())
 
     val wen1      = Input(Bool())
     val addr1     = Input(UInt(7.W))
@@ -72,8 +76,8 @@ class look_2table_ram(width: Int) extends Module {
   val table1 = Module(new look_table1(width))
   val table2 = Module(new look_table2(width))
 
-  table1.io.ren := true.B
-  table2.io.ren := true.B
+  table1.io.ren := io.ren1
+  table2.io.ren := io.ren2
 
   table1.io.wen     := io.wen1
   table1.io.addr    := io.addr1

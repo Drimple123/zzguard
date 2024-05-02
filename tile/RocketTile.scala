@@ -252,15 +252,30 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
       q(i).enq.valid := outer.data_valid_in_nodes.get(i).bundle
       outer.data_ready_out_nodes.get(i).bundle := q(i).enq.ready
 
-      q(i).deq.ready := true.B
+      //q(i).deq.ready := true.B
     }
+    q(3).deq.ready := true.B
 
     val q_rocc = Module(new Queue(UInt(55.W),16))
     q_rocc.io.enq.bits  := outer.rocc_bits_in.get.bundle
     q_rocc.io.enq.valid := outer.rocc_valid_in.get.bundle
     outer.rocc_ready_out.get.bundle := q_rocc.io.enq.ready
     q_rocc.io.deq.ready := true.B
+    dontTouch(q_rocc.io)
+    //接上counter_losuan
+    val counter_losuan_1 = Module(new counter_losuan)
+    counter_losuan_1.io.enq <> q(1).deq
+    //接上ss
+    val ss = Module(new shadow_stack)
+    ss.io.in <> q(0).deq
 
+    val Asan_1 = Module(new Asan_Imp_new)
+    Asan_1.io.rocc_in <> q_rocc.io.deq
+    Asan_1.io.din <> q(2).deq
+    //还没接到内存接口，临时把返回值堵上
+    Asan_1.io.valid_mem := true.B
+    Asan_1.io.data_in := 0.U
+    
     //填上tile1的不要的zzguard的ready口
     outer.roccs(0).module.io.asan_io.ready := false.B
     for(i<-0 to 3){
@@ -375,12 +390,12 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
   ptw.io.requestor <> ptwPorts.toSeq
 
 //===== zzguardrr: Start ====//
-  val zzguard = Module(new zzguardrr)
-  zzguard.io.valid      := core.io.valid
-  zzguard.io.din_pc     := core.io.pc
-  zzguard.io.din_ins    := core.io.ins
-  zzguard.io.din_wdata  := core.io.wdata
-  zzguard.io.din_mdata  := core.io.mdata
+  // val zzguard = Module(new zzguardrr)
+  // zzguard.io.valid      := core.io.valid
+  // zzguard.io.din_pc     := core.io.pc
+  // zzguard.io.din_ins    := core.io.ins
+  // zzguard.io.din_wdata  := core.io.wdata
+  // zzguard.io.din_mdata  := core.io.mdata
 //   core.io.yaofull_counter  := zzguard.io.yaofull_counter
 
 //   val zzguard_ram = Module(new zzguardrr_ram)

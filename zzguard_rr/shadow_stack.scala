@@ -179,17 +179,18 @@ class shadow extends Module {
 
 class shadow_stack extends Module{
   val io = IO(new Bundle{
-    val valid       = Input(Bool())
-    val din         = Input(UInt(160.W))
-    val ready       = Output(Bool())
+    // val valid       = Input(Bool())
+    // val din         = Input(UInt(160.W))
+    // val ready       = Output(Bool())
+    val in = Flipped(Decoupled(UInt(160.W)))
     val ret_correct = Output(Bool())
   })
   dontTouch(io)
-  io.ready   := true.B
+  io.in.ready := true.B
 
   val decode = Module(new mini_decode)
-  decode.io.din   := io.din
-  decode.io.valid := io.valid
+  decode.io.din   := io.in.bits
+  decode.io.valid := io.in.valid
 
   val sha = Module(new shadow)
   sha.io.ins_type := decode.io.ins_type
