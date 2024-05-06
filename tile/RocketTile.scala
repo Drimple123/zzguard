@@ -359,6 +359,8 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     core.io.yaofull_counter:= cmdRouter.get.io.yaofull_counter_out
     core.io.rocc.yaofull_counter_out:= cmdRouter.get.io.yaofull_counter_out
 
+    cmdRouter.get.io.mem_npc := core.io.rocc.mem_npc
+    cmdRouter.get.io.req_addr := core.io.rocc.req_addr
   //===== zzguardrrlht: end ====//
   } else {
     // tie off

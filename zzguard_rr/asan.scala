@@ -53,7 +53,7 @@ class Asan_Imp_new extends Module{
     val in_funct= io.rocc_in.bits(6,0)
 
     //data_fifo来的数据解码
-    val lors_addr = io.din.bits(63,0)
+    val lors_addr = io.din.bits(103,64)
 
     //访存的三种结果
     val can_use_r = RegInit(true.B)

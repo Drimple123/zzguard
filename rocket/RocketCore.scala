@@ -1057,6 +1057,7 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
   // io.dmem.req.bits.tag  := ex_dcache_tag
   // io.dmem.req.bits.cmd  := ex_ctrl.mem_cmd
   // io.dmem.req.bits.size := ex_reg_mem_size
+
   io.dmem.req.bits.signed := !Mux(ex_reg_hls, ex_reg_inst(20), ex_reg_inst(14))
   io.dmem.req.bits.phys := false.B
   // io.dmem.req.bits.addr := encodeVirtualAddress(ex_rs(0), alu.io.adder_out)
@@ -1068,8 +1069,12 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
   io.dmem.req.bits.data := DontCare
   io.dmem.req.bits.mask := DontCare
 
-
-
+  val npc_r = RegNext(mem_npc, 0.U)
+  io.rocc.mem_npc := npc_r
+  val req_addr_w = encodeVirtualAddress(ex_rs(0), alu.io.adder_out)
+  val req_addr_r = RegNext(req_addr_w, 0.U)
+  val req_addr_rr= RegNext(req_addr_r, 0.U)
+  io.rocc.req_addr := req_addr_rr
   
   
 

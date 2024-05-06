@@ -21,7 +21,9 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
     val din_ins     =   Wire(UInt(32.W))
     val din_wdata   =   Wire(UInt(64.W))
     val din_mdata   =   Wire(UInt(64.W))
-  
+    val din_npc     =   Wire(UInt(40.W))
+    val din_req_addr=   Wire(UInt(40.W))
+
     val cmd                     = io.cmd
     val funct                   = cmd.bits.inst.funct
     val rs2                     = cmd.bits.inst.rs2
@@ -64,12 +66,16 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   din_ins     := io.ins & Fill(32, cfg_mask)
   din_wdata   := io.wdata & Fill(64, cfg_mask)
   din_mdata   := io.mdata & Fill(64, cfg_mask)
+  din_npc     := io.mem_npc & Fill(40, cfg_mask)
+  din_req_addr:= io.req_addr & Fill(40, cfg_mask)
   
   //因为查表控制信号慢了1拍，所以数据也慢1拍
   val ins_r   = RegNext(din_ins,0.U)
   val wdata_r = RegNext(din_wdata,0.U)
   val mdata_r = RegNext(din_mdata,0.U)
   val valid_r = RegNext(valid,false.B)
+  val npc_r = RegNext(din_npc, 0.U)
+  val req_addr_r= RegNext(din_req_addr, 0.U)
 
   val table = Module(new look_2table_ram(4))
   table.io.ren1 := valid
@@ -132,6 +138,9 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   cat.io.ins    := ins_r
   cat.io.wdata  := wdata_r
   cat.io.mdata  := mdata_r
+  cat.io.npc    := npc_r
+  cat.io.req_addr := req_addr_r
+
   cat.io.sel    := table.io.sel
   
 

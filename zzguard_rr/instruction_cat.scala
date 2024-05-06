@@ -43,22 +43,38 @@ class instruction_cat1 extends Module{
     val ins      =   Input(UInt(32.W))
     val wdata    =   Input(UInt(64.W))
     val mdata    =   Input(UInt(64.W))
-    val sel      =   Input(UInt(2.W))
+    val npc      =   Input(UInt(40.W))
+    val req_addr =   Input(UInt(40.W))
+    val sel      =   Input(UInt(4.W))
     val out      =   Output(UInt(160.W))
 
     //val ready   =   Input(Bool())
     //val valid   =   Output(Bool())
   })
   
-  val out_w   = WireDefault(0.U(160.W))
-  val cat_w   = WireDefault(0.U(64.W))
-  val cat_m   = WireDefault(0.U(64.W))
-  val cat_wm  = WireDefault(0.U(128.W))
+  dontTouch(io)
+  val cat_1 = Wire(UInt(64.W))
+  val cat_2 = Wire(UInt(64.W))
+  cat_1 := MuxCase(0.U, Array(
+    (io.sel(3) === 1.U) -> io.wdata,
+    (io.sel(2) === 1.U) -> io.mdata
+  ))
+  cat_2 := MuxCase(0.U, Array(
+    (io.sel(1) === 1.U) -> io.npc,
+    (io.sel(0) === 1.U) -> io.req_addr
+  ))
+  val cat_12 = Cat(cat_1, cat_2)
+  val out_w = Cat(io.ins, cat_1, cat_2)
 
-  cat_w  := Mux(io.sel(1) === 1.U, io.wdata, 0.U)
-  cat_m  := Mux(io.sel(0) === 1.U, io.mdata, 0.U)
-  cat_wm := Cat(cat_w, cat_m)
-  out_w  := Cat(io.ins,cat_wm)
+  // val out_w   = WireDefault(0.U(160.W))
+  // val cat_w   = WireDefault(0.U(64.W))
+  // val cat_m   = WireDefault(0.U(64.W))
+  // val cat_wm  = WireDefault(0.U(128.W))
+
+  // cat_w  := Mux(io.sel(1) === 1.U, io.wdata, 0.U)
+  // cat_m  := Mux(io.sel(0) === 1.U, io.mdata, 0.U)
+  // cat_wm := Cat(cat_w, cat_m)
+  // out_w  := Cat(io.ins,cat_wm)
 
   io.out := out_w
 }

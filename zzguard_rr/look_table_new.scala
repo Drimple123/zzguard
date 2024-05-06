@@ -25,17 +25,17 @@ class look_table1(width: Int) extends Module{
 class look_table2(depth: Int) extends Module{
   val io = IO(new Bundle{
     val bitmap    =   Input(UInt(depth.W))
-    val data_in   =   Input(UInt(2.W))
+    val data_in   =   Input(UInt(4.W))
     val addr      =   Input(UInt(log2Ceil(depth).W))
     val ren       =   Input(Bool())
     val wen       =   Input(Bool())
-    val sel       =   Output(UInt(2.W))
+    val sel       =   Output(UInt(4.W))
   })
 
-  val table = Mem(depth,UInt(2.W))
+  val table = Mem(depth,UInt(4.W))
   //创建一个数组，保存每次访问的结果，最后进行或操作
   //val selv = Wire(Vec(depth, UInt(2.W)))
-  val selv = VecInit(0.U(2.W), 0.U(2.W), 0.U(2.W), 0.U(2.W))
+  val selv = VecInit(0.U(4.W), 0.U(4.W), 0.U(4.W), 0.U(4.W))
   when(io.wen === true.B){
     table.write(io.addr,io.data_in)
   }
@@ -50,7 +50,7 @@ class look_table2(depth: Int) extends Module{
       }
     }
   }
-  //参数化失败，不知道怎么用把depth个结果或在一起
+  //参数化失败，不知道怎么用for把depth个结果或在一起
   io.sel := selv(0) | selv(1) | selv(2) | selv(3)
 }
 
@@ -58,7 +58,7 @@ class look_table2(depth: Int) extends Module{
 class look_2table_ram(width: Int) extends Module {
   val io = IO(new Bundle {
     val opcode    = Input(UInt(7.W))
-    val sel       = Output(UInt(2.W))
+    val sel       = Output(UInt(4.W))
     val bitmap    = Output(UInt(width.W))
     
     val ren1      = Input(Bool())
@@ -69,7 +69,7 @@ class look_2table_ram(width: Int) extends Module {
     val data_in1  = Input(UInt(width.W))
     val wen2      = Input(Bool())
     val addr2     = Input(UInt(log2Ceil(width).W))
-    val data_in2  = Input(UInt(2.W))
+    val data_in2  = Input(UInt(4.W))
 
   })
   

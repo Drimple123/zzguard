@@ -55,6 +55,10 @@ class RoCCCoreIO(val nRoCCCSRs: Int = 0)(implicit p: Parameters) extends CoreBun
   val ins   = Input(UInt(32.W))  //wb_reg_inst
   val wdata = Input(UInt(64.W))  //wb_reg_wdata
   val mdata = Input(UInt(64.W))  //mem_reg_wdata  
+
+  val mem_npc= Input(UInt(40.W))
+  val req_addr=Input(UInt(40.W))
+
   val yaofull_counter_out = Output(Bool())
 
   //传到另一个核
@@ -127,6 +131,8 @@ trait HasLazyRoCCModule extends CanHavePTWModule
       rocc.module.io.ins := cmdRouter.io.ins
       rocc.module.io.wdata := cmdRouter.io.wdata
       rocc.module.io.mdata := cmdRouter.io.mdata
+      rocc.module.io.mem_npc := cmdRouter.io.mem_npc
+      rocc.module.io.req_addr := cmdRouter.io.req_addr
       cmdRouter.io.yaofull_counter_in := rocc.module.io.yaofull_counter_out
       //===== zzguardrrlht: End   ====//
     }
@@ -483,6 +489,9 @@ class RoccCommandRouter(opcodes: Seq[OpcodeSet])(implicit p: Parameters)
     val mdata = Input(UInt(64.W))  //mem_reg_wdata  
     val yaofull_counter_out = Output(Bool())
     val yaofull_counter_in = Input(Bool())
+
+    val mem_npc   = Input(UInt(40.W))
+    val req_addr  = Input(UInt(40.W))
 
 //===== zzguardrrlht: End   ====//
   })
