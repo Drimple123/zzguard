@@ -251,7 +251,7 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
       q(i).enq.bits := outer.data_bits_in_nodes.get(i).bundle
       q(i).enq.valid := outer.data_valid_in_nodes.get(i).bundle
       outer.data_ready_out_nodes.get(i).bundle := q(i).enq.ready
-
+      dontTouch(q(i).count)
       //q(i).deq.ready := true.B
     }
     q(3).deq.ready := true.B
@@ -260,7 +260,7 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     q_rocc.io.enq.bits  := outer.rocc_bits_in.get.bundle
     q_rocc.io.enq.valid := outer.rocc_valid_in.get.bundle
     outer.rocc_ready_out.get.bundle := q_rocc.io.enq.ready
-    q_rocc.io.deq.ready := true.B
+    
     dontTouch(q_rocc.io)
     //接上counter_losuan
     val counter_losuan_1 = Module(new counter_losuan)
@@ -272,9 +272,15 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     val Asan_1 = Module(new Asan_Imp_new)
     Asan_1.io.rocc_in <> q_rocc.io.deq
     Asan_1.io.din <> q(2).deq
-    //还没接到内存接口，临时把返回值堵上
-    Asan_1.io.valid_mem := true.B
-    Asan_1.io.data_in := 0.U
+    
+    Asan_1.io.valid_mem := core.io.valid_mem.get
+    Asan_1.io.data_in  := core.io.asan_data_out.get
+
+    core.io.asan_valid.get := Asan_1.io.out_valid
+    core.io.asan_addr.get := Asan_1.io.out_addr
+    core.io.asan_cmd.get  := Asan_1.io.cmd
+    core.io.asan_data_in.get := Asan_1.io.out_data
+
     
     //填上tile1的不要的zzguard的ready口
     outer.roccs(0).module.io.asan_io.ready := false.B

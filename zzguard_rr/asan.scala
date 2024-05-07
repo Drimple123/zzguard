@@ -64,7 +64,7 @@ class Asan_Imp_new extends Module{
 
 
     //在接收到一个信号之后，去访存，信号回来之前应该把ready拉低
-    when(io.din.fire || (io.rocc_in.fire && (in_funct === 5.U))){
+    when((io.din.fire || (io.rocc_in.fire && (in_funct === 5.U))) && mask){
         ready_r := false.B
         addr_fifo_r := lors_addr//把访存的地址存一下，方便后面的比较
     }
@@ -94,6 +94,10 @@ class Asan_Imp_new extends Module{
         offset := in_addr
         mask   := true.B
     }
+    // when(io.rocc_in.fire && (in_funct === 7.U)){
+    //     //offset := in_addr
+    //     mask   := true.B
+    // }
     //分别算rocc来的和fifo来的地址对应的shadow mem的地址
     val fifo_addr = WireDefault(0.U(40.W))
     val rocc_addr = WireDefault(0.U(40.W))
@@ -106,15 +110,15 @@ class Asan_Imp_new extends Module{
 
     
 
-    out_valid_w := (io.din.fire || io.rocc_in.fire) && mask
+    out_valid_w := (io.din.fire || (io.rocc_in.fire && (in_funct === 5.U))) && mask
     io.out_valid := out_valid_w
     io.out_addr := Mux(rocc_valid, rocc_addr, fifo_addr)
     io.cmd := Mux(io.rocc_in.fire, 1.U, 0.U)
 
-    //store的时候，数据要延迟一个周期给
-    val data_r = RegInit(0.U(8.W))
-    data_r := in_size
-    io.out_data := data_r
+    //store的时候，数据要延迟一个周期给,在外面延迟的
+    //val data_r = RegInit(0.U(8.W))
+    //data_r := in_size
+    io.out_data := in_size
 
     //比较的逻辑
     when(io.valid_mem){

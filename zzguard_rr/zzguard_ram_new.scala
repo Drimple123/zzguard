@@ -150,9 +150,8 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   
   //只要有一个不ready，就把主核stall住
   io.fifo_ready := q(0).in.ready && q(1).in.ready && q(2).in.ready && q(3).in.ready
-  for(i<-0 to 3){
+  for(i<- List(0,1,3)){
     q(i).in.bits := cat.io.out
-    io.fifo_ready:= q(i).in.ready
     q(i).out.ready := io.fifo_io(i).ready
     when(valid_r){
       when(bitmap(i) === 1.U){
@@ -166,7 +165,29 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
       q(i).in.valid := false.B
     }
     io.fifo_io(i) <> q(i).out
-
+    dontTouch(q(i).count)
   }
+  //asan要过滤一下
+  q(2).in.bits := cat.io.out
+  q(2).out.ready := io.fifo_io(2).ready
+    when(valid_r){
+      when(bitmap(2) === 1.U){
+        when(mdata_r >= "h88000000".U && mdata_r <="h88100000".U){
+          q(2).in.valid := true.B
+        }
+        .otherwise{
+          q(2).in.valid := false.B
+        }
+      }
+      .otherwise{
+        q(2).in.valid := false.B
+      }
+    }
+    .otherwise{
+      q(2).in.valid := false.B
+    }
+    io.fifo_io(2) <> q(2).out
+    dontTouch(q(2).count)
+
 }
 
