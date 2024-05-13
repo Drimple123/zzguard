@@ -161,13 +161,17 @@ trait HasRocketCoreIO extends HasRocketCoreParameters {
     val ready_stall = if(tileParams.tileId == 0) Some(Input(Bool())) else None
     
 
-    val asan_addr = if(tileParams.tileId == 1) Some(Input(UInt(40.W))) else None
-    val asan_data_in = if(tileParams.tileId == 1) Some(Input(UInt(8.W))) else None
-    val asan_cmd = if(tileParams.tileId == 1) Some(Input(UInt(5.W))) else None
-    val asan_valid = if(tileParams.tileId == 1) Some(Input(Bool())) else None
+    //val asan_addr = if(tileParams.tileId == 1) Some(Input(UInt(40.W))) else None
+    //val asan_data_in = if(tileParams.tileId == 1) Some(Input(UInt(8.W))) else None
+    //val asan_cmd = if(tileParams.tileId == 1) Some(Input(UInt(5.W))) else None
+    //val asan_valid = if(tileParams.tileId == 1) Some(Input(Bool())) else None
+    val mem_acc_io = if(tileParams.tileId == 1) Some((Flipped(Decoupled(new mem_ac_io)))) else None
+
 
     val valid_mem = if(tileParams.tileId == 1) Some(Output(Bool())) else None
     val asan_data_out = if(tileParams.tileId == 1) Some(Output(UInt(40.W))) else None
+    val resp_tag = if(tileParams.tileId == 1) Some(Output(UInt(8.W))) else None
+    val arb_chosen = if(tileParams.tileId == 1) Some(Output(UInt(2.W))) else None
     // val asan_funct = if(tileParams.tileId == 1) Some(Input(UInt(7.W))) else None
 
     // val lors_valid = if(tileParams.tileId == 1) Some(Input(Bool())) else None
@@ -1020,14 +1024,64 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
     // Asan_core1.io.lors_addr := io.lors_addr.get
     // io.ready_out.get := Asan_core1.io.ready_out
     
-    val out_valid_r = RegNext(io.asan_valid.get, false.B)
-    val asan_data_in_r = RegNext(io.asan_data_in.get, 0.U)//写内存的数据要延迟一个周期给
-    val kill_r = RegInit(true.B)
-    when(io.asan_valid.get){
-      kill_r := false.B
-    }
     
 
+
+    //val out_valid_r = RegNext(io.asan_valid.get, false.B)
+    //val asan_data_in_r = RegNext(io.asan_data_in.get, 0.U)//写内存的数据要延迟一个周期给
+    // val kill_r = RegInit(true.B)
+    // when(io.asan_valid.get){
+    //   kill_r := false.B
+    // }
+    
+    //arbiter, 核优先版
+    val arb_mem = Module(new Arbiter((new mem_ac_io), 2))
+    io.dmem.req.valid := arb_mem.io.out.valid
+    arb_mem.io.out.ready := io.dmem.req.ready
+    arb_mem.io.in(0).valid := ex_reg_valid && ex_ctrl.mem
+    arb_mem.io.in(0).bits.tag := ex_dcache_tag
+    arb_mem.io.in(0).bits.cmd := ex_ctrl.mem_cmd
+    arb_mem.io.in(0).bits.addr := encodeVirtualAddress(ex_rs(0), alu.io.adder_out)
+    arb_mem.io.in(0).bits.size := ex_reg_mem_size
+    arb_mem.io.in(1) <> io.mem_acc_io.get
+    
+    io.dmem.req.bits.tag := arb_mem.io.out.bits.tag
+    io.dmem.req.bits.cmd := arb_mem.io.out.bits.cmd
+    io.dmem.req.bits.addr := arb_mem.io.out.bits.addr
+    io.dmem.req.bits.size := arb_mem.io.out.bits.size
+
+    // arb_valid.io.out.ready := io.dmem.req.ready
+    // arb_valid.io.in(0).valid := ex_reg_valid && ex_ctrl.mem
+    // arb_valid.io.in(1).valid := io.asan_valid.get
+    // arb_valid.io.in(0).bits := true.B
+    // arb_valid.io.in(1).bits := true.B
+
+    // io.dmem.req.bits.tag := MuxCase(0.U, Array(
+    //   (arb_valid.io.chosen === 0.U) -> ex_dcache_tag,
+    //   (arb_valid.io.chosen === 1.U) -> 0.U
+    // ))
+
+    // io.dmem.req.bits.cmd := MuxCase(0.U, Array(
+    //   (arb_valid.io.chosen === 0.U) -> ex_ctrl.mem_cmd,
+    //   (arb_valid.io.chosen === 1.U) -> io.asan_cmd.get
+    // ))
+
+    // io.dmem.req.bits.addr := MuxCase(0.U, Array(
+    //   (arb_valid.io.chosen === 0.U) -> encodeVirtualAddress(ex_rs(0), alu.io.adder_out),
+    //   (arb_valid.io.chosen === 1.U) -> io.asan_addr.get
+    // ))
+
+    // io.dmem.req.bits.size := MuxCase(0.U, Array(
+    //   (arb_valid.io.chosen === 0.U) -> ex_reg_mem_size,
+    //   (arb_valid.io.chosen === 1.U) -> 0.U
+    // ))
+
+    io.dmem.s1_data.data := (if (fLen == 0) mem_reg_rs2 else Mux(mem_ctrl.fp, Fill((xLen max fLen) / fLen, io.fpu.store_data), mem_reg_rs2))
+
+
+
+
+    //原版的
     // io.dmem.req.valid     := ex_reg_valid && ex_ctrl.mem
     // io.dmem.req.bits.tag  := ex_dcache_tag
     // io.dmem.req.bits.cmd  := ex_ctrl.mem_cmd
@@ -1036,17 +1090,21 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
     // io.dmem.req.bits.size := ex_reg_mem_size
     // io.dmem.s1_kill := killm_common || mem_ldst_xcpt || fpu_kill_mem
 
-
-    io.dmem.req.valid     := Mux(io.asan_valid.get, true.B, ex_reg_valid && ex_ctrl.mem)
-    io.dmem.req.bits.tag  := Mux(io.asan_valid.get, 0.U, ex_dcache_tag)
-    io.dmem.req.bits.cmd  := Mux(io.asan_valid.get, io.asan_cmd.get, ex_ctrl.mem_cmd)
-    io.dmem.req.bits.addr := Mux(io.asan_valid.get, io.asan_addr.get, encodeVirtualAddress(ex_rs(0), alu.io.adder_out))
-    io.dmem.s1_data.data  := Mux(out_valid_r, asan_data_in_r, (if (fLen == 0) mem_reg_rs2 else Mux(mem_ctrl.fp, Fill((xLen max fLen) / fLen, io.fpu.store_data), mem_reg_rs2)))
-    io.dmem.req.bits.size := Mux(io.asan_valid.get, 0.U, ex_reg_mem_size)
-    io.dmem.s1_kill       := kill_r &&(killm_common || mem_ldst_xcpt || fpu_kill_mem)
+    //mux，asan优先版
+    //io.dmem.req.valid     := Mux(io.asan_valid.get, true.B, ex_reg_valid && ex_ctrl.mem)
+    //io.dmem.req.bits.tag  := Mux(io.asan_valid.get, 0.U, ex_dcache_tag)
+    //io.dmem.req.bits.cmd  := Mux(io.asan_valid.get, io.asan_cmd.get, ex_ctrl.mem_cmd)
+    //io.dmem.req.bits.addr := Mux(io.asan_valid.get, io.asan_addr.get, encodeVirtualAddress(ex_rs(0), alu.io.adder_out))
+    //io.dmem.s1_data.data  := Mux(out_valid_r, asan_data_in_r, (if (fLen == 0) mem_reg_rs2 else Mux(mem_ctrl.fp, Fill((xLen max fLen) / fLen, io.fpu.store_data), mem_reg_rs2)))
+    //io.dmem.req.bits.size := Mux(io.asan_valid.get, 0.U, ex_reg_mem_size)
+    //io.dmem.s1_kill       := kill_r &&(killm_common || mem_ldst_xcpt || fpu_kill_mem)
+    io.dmem.s1_kill := false.B
 
     io.valid_mem.get := io.dmem.resp.valid || io.dmem.perf.grant
+    dontTouch(io.dmem)
     io.asan_data_out.get := io.dmem.resp.bits.data(7,0)
+    io.resp_tag.get := io.dmem.resp.bits.tag
+    io.arb_chosen.get := arb_mem.io.chosen
   }
   else if(tileParams.tileId == 0)
   {

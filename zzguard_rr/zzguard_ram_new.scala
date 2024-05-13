@@ -88,7 +88,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   table.io.data_in2 := rs2_val
 
   when(cmd.fire()){
-    when((funct === 5.U)||(funct === 6.U)){//传到另一个核的asan
+    when((funct === 6.U)){//传到另一个核的asan
       q_rocc.io.in.valid := true.B
       table.io.wen1 := false.B
       table.io.wen2 := false.B

@@ -254,7 +254,7 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
       dontTouch(q(i).count)
       //q(i).deq.ready := true.B
     }
-    q(3).deq.ready := true.B
+    //q(3).deq.ready := true.B
 
     val q_rocc = Module(new Queue(UInt(55.W),16))
     q_rocc.io.enq.bits  := outer.rocc_bits_in.get.bundle
@@ -269,19 +269,28 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     val ss = Module(new shadow_stack)
     ss.io.in <> q(0).deq
 
+    val mem_acc_fifo = Module(new Queue((new mem_ac_io),16))
     val Asan_1 = Module(new Asan_Imp_new)
     Asan_1.io.rocc_in <> q_rocc.io.deq
     Asan_1.io.din <> q(2).deq
     
-    Asan_1.io.valid_mem := core.io.valid_mem.get
-    Asan_1.io.data_in  := core.io.asan_data_out.get
+    Asan_1.io.valid_mem   := core.io.valid_mem.get
+    Asan_1.io.data_in     := core.io.asan_data_out.get
+    Asan_1.io.resp_tag    := core.io.resp_tag.get
+    Asan_1.io.chosen      := core.io.arb_chosen.get
+    mem_acc_fifo.io.enq <> Asan_1.io.mem_acc_io
+    core.io.mem_acc_io.get <> mem_acc_fifo.io.deq
 
-    core.io.asan_valid.get := Asan_1.io.out_valid
-    core.io.asan_addr.get := Asan_1.io.out_addr
-    core.io.asan_cmd.get  := Asan_1.io.cmd
-    core.io.asan_data_in.get := Asan_1.io.out_data
+    //core.io.asan_valid.get := Asan_1.io.out_valid
+    //core.io.asan_addr.get := Asan_1.io.out_addr
+    //core.io.asan_cmd.get  := Asan_1.io.cmd
+    //core.io.asan_data_in.get := Asan_1.io.out_data
 
-    
+    val rowhammer_1 = Module(new rowhammer)
+    rowhammer_1.io.din <> q(3).deq
+    rowhammer_1.io.valid_mem := true.B
+
+
     //填上tile1的不要的zzguard的ready口
     outer.roccs(0).module.io.asan_io.ready := false.B
     for(i<-0 to 3){
