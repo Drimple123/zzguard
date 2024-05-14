@@ -270,6 +270,7 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     ss.io.in <> q(0).deq
 
     val mem_acc_fifo = Module(new Queue((new mem_ac_io),16))
+    
     val Asan_1 = Module(new Asan_Imp_new)
     Asan_1.io.rocc_in <> q_rocc.io.deq
     Asan_1.io.din <> q(2).deq
@@ -288,7 +289,17 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
 
     val rowhammer_1 = Module(new rowhammer)
     rowhammer_1.io.din <> q(3).deq
-    rowhammer_1.io.valid_mem := true.B
+    val mem_acc_fifo_row = Module(new Queue((new mem_ac_io),16))
+    mem_acc_fifo_row.io.enq.valid := rowhammer_1.io.rowham_req_valid
+    mem_acc_fifo_row.io.enq.bits.addr := rowhammer_1.io.rowham_dmemaddr
+    mem_acc_fifo_row.io.enq.bits.cmd := 0.U
+    mem_acc_fifo_row.io.enq.bits.size := 0.U
+    mem_acc_fifo_row.io.enq.bits.tag := 64.U
+    rowhammer_1.io.valid_mem := core.io.valid_mem.get
+    //rowhammer_1.io.resp_tag := core.io.resp_tag.get
+    rowhammer_1.io.resp_tag := core.io.resp_tag.get
+    core.io.mem_acc_io_row.get <> mem_acc_fifo_row.io.deq
+
 
 
     //填上tile1的不要的zzguard的ready口

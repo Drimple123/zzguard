@@ -166,6 +166,7 @@ trait HasRocketCoreIO extends HasRocketCoreParameters {
     //val asan_cmd = if(tileParams.tileId == 1) Some(Input(UInt(5.W))) else None
     //val asan_valid = if(tileParams.tileId == 1) Some(Input(Bool())) else None
     val mem_acc_io = if(tileParams.tileId == 1) Some((Flipped(Decoupled(new mem_ac_io)))) else None
+    val mem_acc_io_row = if(tileParams.tileId == 1) Some((Flipped(Decoupled(new mem_ac_io)))) else None
 
 
     val valid_mem = if(tileParams.tileId == 1) Some(Output(Bool())) else None
@@ -1035,7 +1036,7 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
     // }
     
     //arbiter, 核优先版
-    val arb_mem = Module(new Arbiter((new mem_ac_io), 2))
+    val arb_mem = Module(new Arbiter((new mem_ac_io), 3))
     io.dmem.req.valid := arb_mem.io.out.valid
     arb_mem.io.out.ready := io.dmem.req.ready
     arb_mem.io.in(0).valid := ex_reg_valid && ex_ctrl.mem
@@ -1043,7 +1044,9 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
     arb_mem.io.in(0).bits.cmd := ex_ctrl.mem_cmd
     arb_mem.io.in(0).bits.addr := encodeVirtualAddress(ex_rs(0), alu.io.adder_out)
     arb_mem.io.in(0).bits.size := ex_reg_mem_size
-    arb_mem.io.in(1) <> io.mem_acc_io.get
+    arb_mem.io.in(2) <> io.mem_acc_io.get
+    arb_mem.io.in(1) <> io.mem_acc_io_row.get
+
     
     io.dmem.req.bits.tag := arb_mem.io.out.bits.tag
     io.dmem.req.bits.cmd := arb_mem.io.out.bits.cmd

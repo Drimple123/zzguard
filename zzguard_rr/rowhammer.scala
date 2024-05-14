@@ -18,7 +18,9 @@ class rowhammer extends Module{
     val rowham_dmemaddr = Output(UInt(40.W)) // 填入io.dmem.req.bits.addr
     val rowham_corestalld = Output(Bool()) //停核的信号
     val rowham_req_valid = Output(Bool()) //填入io.dmem.req.valid
+    //val resp_tag    = Input(UInt(8.W))
     //val ready = Output(Bool())
+    val resp_tag    = Input(UInt(8.W))
    
   })
   dontTouch(io)
