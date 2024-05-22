@@ -166,8 +166,8 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
 
   //===== zzguardrr: Start ====//
   //给rocc模块加io的,被迫加到了coreio上，给它填上，免得作妖
-  val fill_dataIO = VecInit(Seq.fill(4)(Module(new fill_laji_io(160)).io))
-  for(i<-0 to 3){
+  val fill_dataIO = VecInit(Seq.fill(6)(Module(new fill_laji_io(160)).io))
+  for(i<-0 to 5){
     core.io.rocc.fifo_io(i) <> fill_dataIO(i).deq
   }
 
@@ -183,7 +183,7 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     // outer.size_out.get.bundle := outer.roccs(0).module.io.asan_size
     // outer.valid_out.get.bundle := outer.roccs(0).module.io.asan_valid
     // outer.funct_out.get.bundle := outer.roccs(0).module.io.asan_funct
-    for(i<-0 to 3){
+    for(i<-0 to 5){
       outer.data_bits_out_nodes.get(i).bundle:= outer.roccs(0).module.io.fifo_io(i).bits
       outer.data_valid_out_nodes.get(i).bundle:= outer.roccs(0).module.io.fifo_io(i).valid
       outer.roccs(0).module.io.fifo_io(i).ready := outer.data_ready_in_nodes.get(i).bundle
@@ -243,11 +243,11 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     // core.io.lors_addr.get := outer.lors_addr_in.get.bundle
     //outer.lors_ready_out.get.bundle := core.io.ready_out.get
 
-    val q = VecInit(Seq.fill(4)(Module(new Queue(UInt(160.W), 32)).io))
-    for(i<-0 to 3){
+    val q = VecInit(Seq.fill(6)(Module(new Queue(UInt(160.W), 32)).io))
+    for(i<-0 to 5){
       dontTouch(q(i).deq)
     }
-    for(i<-0 to 3){
+    for(i<-0 to 5){
       q(i).enq.bits := outer.data_bits_in_nodes.get(i).bundle
       q(i).enq.valid := outer.data_valid_in_nodes.get(i).bundle
       outer.data_ready_out_nodes.get(i).bundle := q(i).enq.ready
@@ -269,18 +269,43 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     val ss = Module(new shadow_stack)
     ss.io.in <> q(0).deq
 
-    val mem_acc_fifo = Module(new Queue((new mem_ac_io),16))
+    val mem_acc_fifo = VecInit(Seq.fill(3)(Module(new Queue((new mem_ac_io),16)).io))
     
-    val Asan_1 = Module(new Asan_Imp_new)
+    val Asan_1 = Module(new Asan_Imp_new(1))
+    val Asan_2 = Module(new Asan_Imp_new(3))
+    val Asan_3 = Module(new Asan_Imp_new(5))
+
     Asan_1.io.rocc_in <> q_rocc.io.deq
     Asan_1.io.din <> q(2).deq
+
+    Asan_2.io.rocc_in <> q_rocc.io.deq
+    Asan_2.io.din <> q(4).deq
+
+    Asan_3.io.rocc_in <> q_rocc.io.deq
+    Asan_3.io.din <> q(5).deq
     
     Asan_1.io.valid_mem   := core.io.valid_mem.get
     Asan_1.io.data_in     := core.io.asan_data_out.get
     Asan_1.io.resp_tag    := core.io.resp_tag.get
-    Asan_1.io.chosen      := core.io.arb_chosen.get
-    mem_acc_fifo.io.enq <> Asan_1.io.mem_acc_io
-    core.io.mem_acc_io.get <> mem_acc_fifo.io.deq
+
+    Asan_2.io.valid_mem   := core.io.valid_mem.get
+    Asan_2.io.data_in     := core.io.asan_data_out.get
+    Asan_2.io.resp_tag    := core.io.resp_tag.get
+
+    Asan_3.io.valid_mem   := core.io.valid_mem.get
+    Asan_3.io.data_in     := core.io.asan_data_out.get
+    Asan_3.io.resp_tag    := core.io.resp_tag.get
+
+
+    //Asan_1.io.chosen      := core.io.arb_chosen.get
+    mem_acc_fifo(0).enq <> Asan_1.io.mem_acc_io
+    core.io.mem_acc_io.get(0) <> mem_acc_fifo(0).deq
+
+    mem_acc_fifo(1).enq <> Asan_2.io.mem_acc_io
+    core.io.mem_acc_io.get(1) <> mem_acc_fifo(1).deq
+
+    mem_acc_fifo(2).enq <> Asan_3.io.mem_acc_io
+    core.io.mem_acc_io.get(2) <> mem_acc_fifo(2).deq
 
     //core.io.asan_valid.get := Asan_1.io.out_valid
     //core.io.asan_addr.get := Asan_1.io.out_addr
@@ -294,7 +319,7 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     mem_acc_fifo_row.io.enq.bits.addr := rowhammer_1.io.rowham_dmemaddr
     mem_acc_fifo_row.io.enq.bits.cmd := 0.U
     mem_acc_fifo_row.io.enq.bits.size := 0.U
-    mem_acc_fifo_row.io.enq.bits.tag := 64.U
+    mem_acc_fifo_row.io.enq.bits.tag := 3.U
     rowhammer_1.io.valid_mem := core.io.valid_mem.get
     //rowhammer_1.io.resp_tag := core.io.resp_tag.get
     rowhammer_1.io.resp_tag := core.io.resp_tag.get
@@ -304,7 +329,7 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
 
     //填上tile1的不要的zzguard的ready口
     outer.roccs(0).module.io.asan_io.ready := false.B
-    for(i<-0 to 3){
+    for(i<-0 to 5){
       outer.roccs(0).module.io.fifo_io(i).ready := false.B
     }
 

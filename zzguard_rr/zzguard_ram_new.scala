@@ -146,10 +146,12 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
 
 
   //val q = VecInit(Seq.fill(2)(Module(new asyncfifo(16, 160)).io))
-  val q = VecInit(Seq.fill(4)(Module(new fifox(160, 32, 5)).io))
+  //q0是ss,q1是counter，q2是asan0，q3是rowhammer，q4和q5是asan1和asan2
+  val q = VecInit(Seq.fill(6)(Module(new fifox(160, 32, 5)).io))
+
   
   //只要有一个不ready，就把主核stall住
-  io.fifo_ready := q(0).in.ready && q(1).in.ready && q(2).in.ready && q(3).in.ready
+  io.fifo_ready := q(0).in.ready && q(1).in.ready && q(2).in.ready && q(3).in.ready && q(4).in.ready && q(5).in.ready
   for(i<- List(0,1,3)){
     q(i).in.bits := cat.io.out
     q(i).out.ready := io.fifo_io(i).ready
@@ -169,25 +171,72 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   }
   //asan要过滤一下
   q(2).in.bits := cat.io.out
+  q(4).in.bits := cat.io.out
+  q(5).in.bits := cat.io.out
   q(2).out.ready := io.fifo_io(2).ready
-    when(valid_r){
-      when(bitmap(2) === 1.U){
-        when(mdata_r >= "h88000000".U && mdata_r <="h88100000".U){
-          q(2).in.valid := true.B
-        }
-        .otherwise{
-          q(2).in.valid := false.B
+  // when(valid_r){
+  //   when(bitmap(2) === 1.U){
+  //     when(mdata_r >= "h88000000".U && mdata_r <="h88100000".U){
+  //       q(2).in.valid := true.B
+  //     }
+  //     .otherwise{
+  //       q(2).in.valid := false.B
+  //     }
+  //   }
+  //   .otherwise{
+  //     q(2).in.valid := false.B
+  //   }
+  // }
+  // .otherwise{
+  //   q(2).in.valid := false.B
+  // }
+
+
+  val rr = Module(new fsm_rr)
+  dontTouch(q(4))
+  dontTouch(q(5))
+  q(4).out.ready := true.B
+  q(5).out.ready := true.B
+
+  when(valid_r){
+    when(bitmap(2) === 1.U){
+      when(mdata_r >= "h88000000".U && mdata_r <="h88100000".U){//提前筛选一下，asan只管malloc
+        rr.io.en := true.B
+        for(i<- List(2,4,5)){
+          when(rr.io.num === i.U){
+            q(i).in.valid := true.B
+          }
+          .otherwise{
+            q(i).in.valid := false.B
+          }
         }
       }
       .otherwise{
+        rr.io.en := false.B
         q(2).in.valid := false.B
+        q(4).in.valid := false.B
+        q(5).in.valid := false.B
       }
     }
     .otherwise{
+      rr.io.en := false.B
       q(2).in.valid := false.B
+      q(4).in.valid := false.B
+      q(5).in.valid := false.B
     }
-    io.fifo_io(2) <> q(2).out
-    dontTouch(q(2).count)
+  }
+  .otherwise{
+    rr.io.en := false.B
+    q(2).in.valid := false.B
+    q(4).in.valid := false.B
+    q(5).in.valid := false.B
+    
+  }
+
+  for(i<- List(2,4,5)){
+    io.fifo_io(i) <> q(i).out
+  }
+  dontTouch(q(2).count)
 
 }
 

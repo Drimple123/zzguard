@@ -69,7 +69,7 @@ class RoCCCoreIO(val nRoCCCSRs: Int = 0)(implicit p: Parameters) extends CoreBun
   val asan_io = Decoupled(UInt(55.W))
   //val fifo_ready = Output(Vec(4,Bool()))
   val fifo_ready = Output(Bool())
-  val fifo_io = Vec(4, Decoupled(UInt(160.W)))
+  val fifo_io = Vec(6, Decoupled(UInt(160.W)))
 
 //===== zzguardrrlht: End   ====//
 }

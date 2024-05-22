@@ -7,7 +7,7 @@ class fsm_rr extends Module {
     val io = IO(new Bundle {
         val en    = Input(Bool())
         //val valid = Output(Bool())
-        val num   = Output(UInt(2.W))
+        val num   = Output(UInt(3.W))
     })
 
     //val zero :: one :: two :: Nil = Enum(3)
@@ -21,31 +21,31 @@ class fsm_rr extends Module {
         is(0.U) {
             when(io.en) {
                 stateReg    := 1.U
-                io.num      := 0.U
+                io.num      := 2.U
             }
             .otherwise{
                 stateReg    := 0.U
-                io.num      := 0.U
+                io.num      := 2.U
             }
         }
         is(1.U) {
             when(io.en) {
                 stateReg    := 2.U
-                io.num      := 1.U
+                io.num      := 4.U
             }
             .otherwise{
                 stateReg    := 1.U
-                io.num      := 1.U
+                io.num      := 4.U
             }
         }
         is(2.U) {
             when(io.en) {
                 stateReg    := 0.U
-                io.num      := 2.U
+                io.num      := 5.U
             }
             .otherwise{
                 stateReg    := 2.U
-                io.num      := 2.U
+                io.num      := 5.U
             }
         }
     }
