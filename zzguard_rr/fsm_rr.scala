@@ -3,7 +3,7 @@ package freechips.rocketchip.zzguardrr
 import chisel3._
 import chisel3.util._
 
-class fsm_rr extends Module {
+class fsm_rr(num1: Int, num2: Int, num3: Int) extends Module {
     val io = IO(new Bundle {
         val en    = Input(Bool())
         //val valid = Output(Bool())
@@ -21,31 +21,31 @@ class fsm_rr extends Module {
         is(0.U) {
             when(io.en) {
                 stateReg    := 1.U
-                io.num      := 2.U
+                io.num      := num1.U
             }
             .otherwise{
                 stateReg    := 0.U
-                io.num      := 2.U
+                io.num      := num1.U
             }
         }
         is(1.U) {
             when(io.en) {
                 stateReg    := 2.U
-                io.num      := 4.U
+                io.num      := num2.U
             }
             .otherwise{
                 stateReg    := 1.U
-                io.num      := 4.U
+                io.num      := num2.U
             }
         }
         is(2.U) {
             when(io.en) {
                 stateReg    := 0.U
-                io.num      := 5.U
+                io.num      := num3.U
             }
             .otherwise{
                 stateReg    := 2.U
-                io.num      := 5.U
+                io.num      := num3.U
             }
         }
     }

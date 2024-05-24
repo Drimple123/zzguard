@@ -196,7 +196,7 @@ trait CanAttachTile {
       // context.size_mid := domain.element.size_out.get
       // context.valid_mid := domain.element.valid_out.get
       // context.funct_mid := domain.element.funct_out.get
-      for(i<-0 to 5){
+      for(i<-0 to 7){
         context.data_bits_mid(i) := domain.element.data_bits_out_nodes.get(i)
         context.data_valid_mid(i) := domain.element.data_valid_out_nodes.get(i)
         domain.element.data_ready_in_nodes.get(i) := context.data_ready_mid(i)
@@ -215,7 +215,7 @@ trait CanAttachTile {
       // domain.element.size_in.get := context.size_mid
       // domain.element.valid_in.get := context.valid_mid
       // domain.element.funct_in.get := context.funct_mid
-      for(i<-0 to 5){
+      for(i<-0 to 7){
         domain.element.data_bits_in_nodes.get(i) := context.data_bits_mid(i)
         domain.element.data_valid_in_nodes.get(i) := context.data_valid_mid(i)
         context.data_ready_mid(i) := domain.element.data_ready_out_nodes.get(i)

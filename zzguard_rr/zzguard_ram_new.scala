@@ -146,15 +146,15 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
 
 
   //val q = VecInit(Seq.fill(2)(Module(new asyncfifo(16, 160)).io))
-  //q0是ss,q1是counter，q2是asan0，q3是rowhammer，q4和q5是asan1和asan2
-  val q = VecInit(Seq.fill(6)(Module(new fifox(160, 32, 5)).io))
+  //q0是ss,q1是counter，q2是asan0，q3是rowhammer，q4和q5是asan1和asan2,q6和q7是counter1和2
+  val q = VecInit(Seq.fill(8)(Module(new fifox(160, 32, 5)).io))
 
   
   //只要有一个不ready，就把主核stall住
-  io.fifo_ready := q(0).in.ready && q(1).in.ready && q(2).in.ready && q(3).in.ready && q(4).in.ready && q(5).in.ready
-  for(i<- List(0,1,3)){
+  io.fifo_ready := q(0).in.ready && q(1).in.ready && q(2).in.ready && q(3).in.ready && q(4).in.ready && q(5).in.ready && q(6).in.ready && q(7).in.ready
+  for(i<- List(0,3)){
     q(i).in.bits := cat.io.out
-    q(i).out.ready := io.fifo_io(i).ready
+    //q(i).out.ready := io.fifo_io(i).ready
     when(valid_r){
       when(bitmap(i) === 1.U){
         q(i).in.valid := true.B
@@ -170,10 +170,10 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
     dontTouch(q(i).count)
   }
   //asan要过滤一下
-  q(2).in.bits := cat.io.out
-  q(4).in.bits := cat.io.out
-  q(5).in.bits := cat.io.out
-  q(2).out.ready := io.fifo_io(2).ready
+  for(i <- List(1,2,4,5,6,7)){
+    q(i).in.bits := cat.io.out
+  }
+  //q(2).out.ready := io.fifo_io(2).ready
   // when(valid_r){
   //   when(bitmap(2) === 1.U){
   //     when(mdata_r >= "h88000000".U && mdata_r <="h88100000".U){
@@ -192,18 +192,22 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   // }
 
 
-  val rr = Module(new fsm_rr)
+  val rr_asan = Module(new fsm_rr(2,4,5))
+  val rr_counter= Module(new fsm_rr(1,6,7))
   dontTouch(q(4))
   dontTouch(q(5))
-  q(4).out.ready := true.B
-  q(5).out.ready := true.B
-
+  dontTouch(q(6))
+  dontTouch(q(7))
+  // q(1).out.ready := true.B
+  // q(6).out.ready := true.B
+  // q(7).out.ready := true.B
+  //asan的处理
   when(valid_r){
     when(bitmap(2) === 1.U){
       when(mdata_r >= "h88000000".U && mdata_r <="h88100000".U){//提前筛选一下，asan只管malloc
-        rr.io.en := true.B
+        rr_asan.io.en := true.B
         for(i<- List(2,4,5)){
-          when(rr.io.num === i.U){
+          when(rr_asan.io.num === i.U){
             q(i).in.valid := true.B
           }
           .otherwise{
@@ -212,29 +216,57 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
         }
       }
       .otherwise{
-        rr.io.en := false.B
+        rr_asan.io.en := false.B
         q(2).in.valid := false.B
         q(4).in.valid := false.B
         q(5).in.valid := false.B
       }
     }
     .otherwise{
-      rr.io.en := false.B
+      rr_asan.io.en := false.B
       q(2).in.valid := false.B
       q(4).in.valid := false.B
       q(5).in.valid := false.B
     }
   }
   .otherwise{
-    rr.io.en := false.B
+    rr_asan.io.en := false.B
     q(2).in.valid := false.B
     q(4).in.valid := false.B
     q(5).in.valid := false.B
     
   }
 
-  for(i<- List(2,4,5)){
+  for(i<- List(1,2,4,5,6,7)){
     io.fifo_io(i) <> q(i).out
+  }
+
+  //搞counter
+  when(valid_r){
+    when(bitmap(1) === 1.U){
+      rr_counter.io.en := true.B
+      for(i<- List(1,6,7)){
+        when(rr_counter.io.num === i.U){
+          q(i).in.valid := true.B
+        }
+        .otherwise{
+          q(i).in.valid := false.B
+        }
+      }
+    }
+    .otherwise{
+      rr_counter.io.en := false.B
+      q(1).in.valid := false.B
+      q(6).in.valid := false.B
+      q(7).in.valid := false.B
+    }
+  }
+  .otherwise{
+    rr_counter.io.en := false.B
+    q(1).in.valid := false.B
+    q(6).in.valid := false.B
+    q(7).in.valid := false.B
+    
   }
   dontTouch(q(2).count)
 

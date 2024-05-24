@@ -916,7 +916,7 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
 
   //zzguard
   io.rocc.asan_io.ready := false.B//给rocc模块加io的,被迫加到了coreio上，给它填上，免得作妖
-  for(i<-0 to 5){
+  for(i<-0 to 7){
     io.rocc.fifo_io(i).ready := false.B
   }
   if(tileParams.tileId == 0){
