@@ -338,10 +338,10 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
 
 
     //填上tile1的不要的zzguard的ready口
-    outer.roccs(0).module.io.asan_io.ready := false.B
-    for(i<-0 to 7){
-      outer.roccs(0).module.io.fifo_io(i).ready := false.B
-    }
+    // outer.roccs(0).module.io.asan_io.ready := false.B
+    // for(i<-0 to 7){
+    //   outer.roccs(0).module.io.fifo_io(i).ready := false.B
+    // }
 
     
 
@@ -417,8 +417,8 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     cmdRouter.get.io.ins := core.io.rocc.ins
     cmdRouter.get.io.wdata := core.io.rocc.wdata
     cmdRouter.get.io.mdata := core.io.rocc.mdata
-    core.io.yaofull_counter:= cmdRouter.get.io.yaofull_counter_out
-    core.io.rocc.yaofull_counter_out:= cmdRouter.get.io.yaofull_counter_out
+    //core.io.yaofull_counter:= cmdRouter.get.io.yaofull_counter_out
+    //core.io.rocc.yaofull_counter_out:= cmdRouter.get.io.yaofull_counter_out
 
     cmdRouter.get.io.mem_npc := core.io.rocc.mem_npc
     cmdRouter.get.io.req_addr := core.io.rocc.req_addr

@@ -146,7 +146,7 @@ trait HasRocketCoreIO extends HasRocketCoreParameters {
     val mdata = Output(UInt(64.W))  //mem_reg_wdata
 
     // //val full_counter = Input(Bool()) //counter的fifo满了
-     val yaofull_counter = Input(Bool())
+     //val yaofull_counter = Input(Bool())
 
     // //rocc指令,为了配置我的表
     // val rs1 = Output(UInt(64.W))

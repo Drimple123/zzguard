@@ -49,7 +49,8 @@ class RoCCCoreIO(val nRoCCCSRs: Int = 0)(implicit p: Parameters) extends CoreBun
   val interrupt = Output(Bool())
   val exception = Input(Bool())
   val csrs = Flipped(Vec(nRoCCCSRs, new CustomCSRIO))
-  //===== zzguardrrlht: Start ====//
+  //===== zzguardrrlht: Start ====//DCachePorts
+
   val valid = Input(Bool())      //wb_reg_valid
   val pc    = Input(UInt(40.W))  //wb_reg_pc
   val ins   = Input(UInt(32.W))  //wb_reg_inst
@@ -59,7 +60,7 @@ class RoCCCoreIO(val nRoCCCSRs: Int = 0)(implicit p: Parameters) extends CoreBun
   val mem_npc= Input(UInt(40.W))
   val req_addr=Input(UInt(40.W))
 
-  val yaofull_counter_out = Output(Bool())
+  //val yaofull_counter_out = Output(Bool())
 
   //传到另一个核
   // val asan_addr = Output(UInt(40.W))
@@ -133,7 +134,7 @@ trait HasLazyRoCCModule extends CanHavePTWModule
       rocc.module.io.mdata := cmdRouter.io.mdata
       rocc.module.io.mem_npc := cmdRouter.io.mem_npc
       rocc.module.io.req_addr := cmdRouter.io.req_addr
-      cmdRouter.io.yaofull_counter_in := rocc.module.io.yaofull_counter_out
+      //cmdRouter.io.yaofull_counter_in := rocc.module.io.yaofull_counter_out
       //===== zzguardrrlht: End   ====//
     }
 
@@ -487,8 +488,8 @@ class RoccCommandRouter(opcodes: Seq[OpcodeSet])(implicit p: Parameters)
     val ins   = Input(UInt(32.W))  //wb_reg_inst
     val wdata = Input(UInt(64.W))  //wb_reg_wdata
     val mdata = Input(UInt(64.W))  //mem_reg_wdata  
-    val yaofull_counter_out = Output(Bool())
-    val yaofull_counter_in = Input(Bool())
+    //val yaofull_counter_out = Output(Bool())
+    //val yaofull_counter_in = Input(Bool())
 
     val mem_npc   = Input(UInt(40.W))
     val req_addr  = Input(UInt(40.W))
@@ -506,7 +507,7 @@ class RoccCommandRouter(opcodes: Seq[OpcodeSet])(implicit p: Parameters)
   cmd.ready := cmdReadys.reduce(_ || _)
   io.busy := cmd.valid
 //===== zzguardrrlht: Start ====//
-io.yaofull_counter_out := io.yaofull_counter_in
+//io.yaofull_counter_out := io.yaofull_counter_in
 //===== zzguardrrlht: End   ====//
   assert(PopCount(cmdReadys) <= 1.U,
     "Custom opcode matched for more than one accelerator")

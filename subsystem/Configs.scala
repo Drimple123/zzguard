@@ -390,16 +390,49 @@ class WithHypervisor(hext: Boolean = true) extends Config((site, here, up) => {
 })
 
 
+// class WithzzguardRoCC extends Config((site, here, up) => {
+//   case BuildRoCC => List(
+//     (p: Parameters) => {
+//         val tiles = up(TilesLocated(InSubsystem),site)
+//         if(tiles.indexOf(site(TileKey)) == 0){
+//           val zzguard = LazyModule(new zzguardrr_ram_new(OpcodeSet.custom0)(p.alterPartial({case TileKey => "tile0"})))
+//         zzguard
+//         }
+//         else{
+//           None
+//         }
+        
+//     }
+
+//   ) 
+// })
+
 class WithzzguardRoCC extends Config((site, here, up) => {
-  case BuildRoCC => List(
+  case BuildRoCC => {
+    val existingRoCCs = up(BuildRoCC, site)
+    val tiles = up(TilesLocated(InSubsystem), site)
+    
+    site(TileKey) match {
+      case tile: RocketTileParams =>
+        val tileId = tile.tileId
+        println(s"********zzguard: current tile id = $tileId")
 
-    (p: Parameters) => {
-        val zzguard = LazyModule(new zzguardrr_ram_new(OpcodeSet.custom0)(p))
-        zzguard
+        existingRoCCs ++ {
+          if (tileId == 0) {  // 修改这里以符合你的判断条件
+            List((p: Parameters) => {
+              val zzguard = LazyModule(new zzguardrr_ram_new(OpcodeSet.custom0)(p))
+              zzguard
+            })
+          } else {
+            List()
+          }
+        }
+      case _ =>
+        existingRoCCs
     }
-
-  ) 
+  }
 })
+
 
 class WithRoccExample extends Config((site, here, up) => {
   case BuildRoCC => List(
