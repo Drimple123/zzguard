@@ -204,7 +204,6 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   //asan的处理
   when(valid_r){
     when(bitmap(2) === 1.U){
-      when(mdata_r >= "h88000000".U && mdata_r <="h88100000".U){//提前筛选一下，asan只管malloc
         rr_asan.io.en := true.B
         for(i<- List(2,4,5)){
           when(rr_asan.io.num === i.U){
@@ -214,13 +213,6 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
             q(i).in.valid := false.B
           }
         }
-      }
-      .otherwise{
-        rr_asan.io.en := false.B
-        q(2).in.valid := false.B
-        q(4).in.valid := false.B
-        q(5).in.valid := false.B
-      }
     }
     .otherwise{
       rr_asan.io.en := false.B
