@@ -172,12 +172,8 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   q(2).out.ready := io.fifo_io(2).ready
     when(valid_r){
       when(bitmap(2) === 1.U){
-        when(mdata_r >= "h88000000".U && mdata_r <="h88100000".U){
+        
           q(2).in.valid := true.B
-        }
-        .otherwise{
-          q(2).in.valid := false.B
-        }
       }
       .otherwise{
         q(2).in.valid := false.B
