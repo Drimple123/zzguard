@@ -146,7 +146,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
 
 
   //val q = VecInit(Seq.fill(2)(Module(new asyncfifo(16, 160)).io))
-  val q = VecInit(Seq.fill(4)(Module(new fifox(160, 32, 5)).io))
+  val q = VecInit(Seq.fill(4)(Module(new fifox(160, 32, 10)).io))
   
   //只要有一个不ready，就把主核stall住
   io.fifo_ready := q(0).in.ready && q(1).in.ready && q(2).in.ready && q(3).in.ready
