@@ -14,6 +14,7 @@ import freechips.rocketchip.tilelink._
 import freechips.rocketchip.util.InOrderArbiter
 //===== zzguardrr: Start ====//
 import freechips.rocketchip.zzguardrr._
+import freechips.rocketchip.subsystem._
 //===== zzguardrr: End   ====//
 
 case object BuildRoCC extends Field[Seq[Parameters => LazyRoCC]](Nil)
@@ -51,14 +52,13 @@ class RoCCCoreIO(val nRoCCCSRs: Int = 0)(implicit p: Parameters) extends CoreBun
   val csrs = Flipped(Vec(nRoCCCSRs, new CustomCSRIO))
   //===== zzguardrrlht: Start ====//DCachePorts
 
-  val valid = Input(Bool())      //wb_reg_valid
-  val pc    = Input(UInt(40.W))  //wb_reg_pc
-  val ins   = Input(UInt(32.W))  //wb_reg_inst
-  val wdata = Input(UInt(64.W))  //wb_reg_wdata
-  val mdata = Input(UInt(64.W))  //mem_reg_wdata  
+  //val pc    = Input(UInt(40.W))  //wb_reg_pc
+  //val ins   = Input(UInt(32.W))  //wb_reg_inst
+  //val wdata = Input(UInt(64.W))  //wb_reg_wdata
+  //val mdata = Input(UInt(64.W))  //mem_reg_wdata  
 
-  val mem_npc= Input(UInt(40.W))
-  val req_addr=Input(UInt(40.W))
+  //val mem_npc= Input(UInt(40.W))
+  //val req_addr=Input(UInt(40.W))
 
   //val yaofull_counter_out = Output(Bool())
 
@@ -67,10 +67,10 @@ class RoCCCoreIO(val nRoCCCSRs: Int = 0)(implicit p: Parameters) extends CoreBun
   // val asan_size = Output(UInt(8.W))
   // val asan_valid= Output(Bool())
   // val asan_funct= Output(UInt(7.W))
-  val asan_io = Decoupled(UInt(55.W))
+  //val asan_io = Decoupled(UInt(55.W))
   //val fifo_ready = Output(Vec(4,Bool()))
-  val fifo_ready = Output(Bool())
-  val fifo_io = Vec(8, Decoupled(UInt(160.W)))
+  //val fifo_ready = Output(Bool())
+  //val fifo_io = Vec(8, Decoupled(UInt(160.W)))
 
 //===== zzguardrrlht: End   ====//
 }
@@ -79,6 +79,56 @@ class RoCCIO(val nPTWPorts: Int, nRoCCCSRs: Int)(implicit p: Parameters) extends
   val ptw = Vec(nPTWPorts, new TLBPTWIO)
   val fpu_req = Decoupled(new FPInput)
   val fpu_resp = Flipped(Decoupled(new FPResult))
+  //asan_rocc
+  val gaga = if(tileParams.tileId == 1) Some(Input(UInt(40.W))) else None
+
+  //zzguard
+  val valid = if(tileParams.tileId == 0) Some(Input(Bool())) else None
+  val pc = if(tileParams.tileId == 0) Some(Input(UInt(40.W))) else None
+  val ins = if(tileParams.tileId == 0) Some(Input(UInt(32.W))) else None
+  val wdata = if(tileParams.tileId == 0) Some(Input(UInt(64.W))) else None
+  val mdata = if(tileParams.tileId == 0) Some(Input(UInt(64.W))) else None
+  val mem_npc = if(tileParams.tileId == 0) Some(Input(UInt(40.W))) else None
+  val req_addr = if(tileParams.tileId == 0) Some(Input(UInt(40.W))) else None
+
+  val asan_io = if(tileParams.tileId == 0) Some(Decoupled(UInt(55.W))) else None
+  val fifo_ready = if(tileParams.tileId == 0) Some(Output(Bool())) else None
+  val fifo_io = if(tileParams.tileId == 0) Some(Vec(8, Decoupled(UInt(160.W)))) else None
+
+
+
+
+
+  
+
+
+
+
+
+
+  //dontTouch(gaga.get)
+
+  // val valid = Input(Bool())      //wb_reg_valid
+  // val pc    = Input(UInt(40.W))  //wb_reg_pc
+  // val ins   = Input(UInt(32.W))  //wb_reg_inst
+  // val wdata = Input(UInt(64.W))  //wb_reg_wdata
+  // val mdata = Input(UInt(64.W))  //mem_reg_wdata  
+
+  // val mem_npc= Input(UInt(40.W))
+  // val req_addr=Input(UInt(40.W))
+
+  // //val yaofull_counter_out = Output(Bool())
+
+  // //传到另一个核
+  // // val asan_addr = Output(UInt(40.W))
+  // // val asan_size = Output(UInt(8.W))
+  // // val asan_valid= Output(Bool())
+  // // val asan_funct= Output(UInt(7.W))
+  // val asan_io = Decoupled(UInt(55.W))
+  // //val fifo_ready = Output(Vec(4,Bool()))
+  // val fifo_ready = Output(Bool())
+  // val fifo_io = Vec(8, Decoupled(UInt(160.W)))
+
 }
 
 /** Base classes for Diplomatic TL2 RoCC units **/
@@ -127,13 +177,13 @@ trait HasLazyRoCCModule extends CanHavePTWModule
       dcachePorts += dcIF.io.cache
       respArb.io.in(i) <> Queue(rocc.module.io.resp)
       //===== zzguardrrlht: Start ====//
-      rocc.module.io.valid := cmdRouter.io.valid
-      rocc.module.io.pc := cmdRouter.io.pc
-      rocc.module.io.ins := cmdRouter.io.ins
-      rocc.module.io.wdata := cmdRouter.io.wdata
-      rocc.module.io.mdata := cmdRouter.io.mdata
-      rocc.module.io.mem_npc := cmdRouter.io.mem_npc
-      rocc.module.io.req_addr := cmdRouter.io.req_addr
+      // rocc.module.io.valid := cmdRouter.io.valid
+      // rocc.module.io.pc := cmdRouter.io.pc
+      // rocc.module.io.ins := cmdRouter.io.ins
+      // rocc.module.io.wdata := cmdRouter.io.wdata
+      // rocc.module.io.mdata := cmdRouter.io.mdata
+      // rocc.module.io.mem_npc := cmdRouter.io.mem_npc
+      // rocc.module.io.req_addr := cmdRouter.io.req_addr
       //cmdRouter.io.yaofull_counter_in := rocc.module.io.yaofull_counter_out
       //===== zzguardrrlht: End   ====//
     }
@@ -483,16 +533,16 @@ class RoccCommandRouter(opcodes: Seq[OpcodeSet])(implicit p: Parameters)
     val out = Vec(opcodes.size, Decoupled(new RoCCCommand))
     val busy = Output(Bool())
     //===== zzguardrrlht: Start ====//
-    val valid = Input(Bool())      //wb_reg_valid
-    val pc    = Input(UInt(40.W))  //wb_reg_pc
-    val ins   = Input(UInt(32.W))  //wb_reg_inst
-    val wdata = Input(UInt(64.W))  //wb_reg_wdata
-    val mdata = Input(UInt(64.W))  //mem_reg_wdata  
-    //val yaofull_counter_out = Output(Bool())
-    //val yaofull_counter_in = Input(Bool())
+    // val valid = Input(Bool())      //wb_reg_valid
+    // val pc    = Input(UInt(40.W))  //wb_reg_pc
+    // val ins   = Input(UInt(32.W))  //wb_reg_inst
+    // val wdata = Input(UInt(64.W))  //wb_reg_wdata
+    // val mdata = Input(UInt(64.W))  //mem_reg_wdata  
+    // //val yaofull_counter_out = Output(Bool())
+    // //val yaofull_counter_in = Input(Bool())
 
-    val mem_npc   = Input(UInt(40.W))
-    val req_addr  = Input(UInt(40.W))
+    // val mem_npc   = Input(UInt(40.W))
+    // val req_addr  = Input(UInt(40.W))
 
 //===== zzguardrrlht: End   ====//
   })

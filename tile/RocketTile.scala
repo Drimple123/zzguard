@@ -166,14 +166,14 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
 
   //===== zzguardrr: Start ====//
   //给rocc模块加io的,被迫加到了coreio上，给它填上，免得作妖
-  val fill_dataIO = VecInit(Seq.fill(8)(Module(new fill_laji_io(160)).io))
-  for(i<-0 to 7){
-    core.io.rocc.fifo_io(i) <> fill_dataIO(i).deq
-  }
+  // val fill_dataIO = VecInit(Seq.fill(8)(Module(new fill_laji_io(160)).io))
+  // for(i<-0 to 7){
+  //   core.io.rocc.fifo_io(i) <> fill_dataIO(i).deq
+  // }
 
-  val fill_asanIO = Module(new fill_laji_io(55))
-  core.io.rocc.asan_io <> fill_asanIO.io.deq
-  core.io.rocc.fifo_ready := false.B
+  // val fill_asanIO = Module(new fill_laji_io(55))
+  // core.io.rocc.asan_io <> fill_asanIO.io.deq
+  // core.io.rocc.fifo_ready := false.B
 
   if(outer.rocketParams.tileId == 0){
     println("######zzguard###########   tileid: ",outer.rocketParams.tileId,"  ############")
@@ -184,15 +184,28 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     // outer.valid_out.get.bundle := outer.roccs(0).module.io.asan_valid
     // outer.funct_out.get.bundle := outer.roccs(0).module.io.asan_funct
     for(i<-0 to 7){
-      outer.data_bits_out_nodes.get(i).bundle:= outer.roccs(0).module.io.fifo_io(i).bits
-      outer.data_valid_out_nodes.get(i).bundle:= outer.roccs(0).module.io.fifo_io(i).valid
-      outer.roccs(0).module.io.fifo_io(i).ready := outer.data_ready_in_nodes.get(i).bundle
+      outer.data_bits_out_nodes.get(i).bundle:= outer.roccs(0).module.io.fifo_io.get(i).bits
+      outer.data_valid_out_nodes.get(i).bundle:= outer.roccs(0).module.io.fifo_io.get(i).valid
+      outer.roccs(0).module.io.fifo_io.get(i).ready := outer.data_ready_in_nodes.get(i).bundle
 
     }
-    core.io.ready_stall.get := outer.roccs(0).module.io.fifo_ready
-    outer.rocc_bits_out.get.bundle := outer.roccs(0).module.io.asan_io.bits
-    outer.rocc_valid_out.get.bundle := outer.roccs(0).module.io.asan_io.valid
-    outer.roccs(0).module.io.asan_io.ready := outer.rocc_ready_in.get.bundle
+    core.io.ready_stall.get := outer.roccs(0).module.io.fifo_ready.get
+    outer.rocc_bits_out.get.bundle := outer.roccs(0).module.io.asan_io.get.bits
+    outer.rocc_valid_out.get.bundle := outer.roccs(0).module.io.asan_io.get.valid
+    outer.roccs(0).module.io.asan_io.get.ready := outer.rocc_ready_in.get.bundle
+
+    //新的直接从core里面拉到zzguard的一条路
+    outer.roccs(0).module.io.valid.get := core.io.valid
+    outer.roccs(0).module.io.pc.get := core.io.pc
+    outer.roccs(0).module.io.ins.get := core.io.ins
+    outer.roccs(0).module.io.wdata.get := core.io.wdata
+    outer.roccs(0).module.io.mdata.get := core.io.mdata
+    outer.roccs(0).module.io.mem_npc.get := core.io.mem_npc
+    outer.roccs(0).module.io.req_addr.get := core.io.req_addr
+    outer.roccs(0).module.io.pc.get := core.io.pc
+    
+
+
 
     //asan的小filter，如果ins是load or store ， valid 拉高
     // val asan_filter_1 = Module(new asan_filter)
@@ -242,6 +255,14 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     // core.io.lors_valid.get := outer.lors_valid_in.get.bundle
     // core.io.lors_addr.get := outer.lors_addr_in.get.bundle
     //outer.lors_ready_out.get.bundle := core.io.ready_out.get
+
+    outer.roccs(0).module.io.gaga.get := core.io.ins
+    
+
+    // outer.roccs(0).module.io.asan_io.ready := true.B
+    // for(i <-0 to 7){
+    //   outer.roccs(0).module.io.fifo_io(i).ready := true.B
+    // }
 
     val q = VecInit(Seq.fill(8)(Module(new Queue(UInt(160.W), 32)).io))
     for(i<-0 to 7){
@@ -344,7 +365,7 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     // }
 
     
-
+    
 
     
   }
@@ -412,16 +433,16 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     (core.io.rocc.csrs zip roccCSRIOs.flatten).foreach { t => t._2 <> t._1 }
 
     //===== zzguardrrlht: Start ====//
-    cmdRouter.get.io.valid := core.io.rocc.valid
-    cmdRouter.get.io.pc := core.io.rocc.pc
-    cmdRouter.get.io.ins := core.io.rocc.ins
-    cmdRouter.get.io.wdata := core.io.rocc.wdata
-    cmdRouter.get.io.mdata := core.io.rocc.mdata
-    //core.io.yaofull_counter:= cmdRouter.get.io.yaofull_counter_out
-    //core.io.rocc.yaofull_counter_out:= cmdRouter.get.io.yaofull_counter_out
+    // cmdRouter.get.io.valid := core.io.rocc.valid
+    // cmdRouter.get.io.pc := core.io.rocc.pc
+    // cmdRouter.get.io.ins := core.io.rocc.ins
+    // cmdRouter.get.io.wdata := core.io.rocc.wdata
+    // cmdRouter.get.io.mdata := core.io.rocc.mdata
+    // //core.io.yaofull_counter:= cmdRouter.get.io.yaofull_counter_out
+    // //core.io.rocc.yaofull_counter_out:= cmdRouter.get.io.yaofull_counter_out
 
-    cmdRouter.get.io.mem_npc := core.io.rocc.mem_npc
-    cmdRouter.get.io.req_addr := core.io.rocc.req_addr
+    // cmdRouter.get.io.mem_npc := core.io.rocc.mem_npc
+    // cmdRouter.get.io.req_addr := core.io.rocc.req_addr
   //===== zzguardrrlht: end ====//
   } else {
     // tie off

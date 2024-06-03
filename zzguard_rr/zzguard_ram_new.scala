@@ -46,7 +46,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   rocc_packet := Cat(packet_mid, cmd.bits.inst.funct)
   val q_rocc = Module(new fifox(55, 32, 5))
   q_rocc.io.in.bits := rocc_packet
-  io.asan_io <> q_rocc.io.out
+  io.asan_io.get <> q_rocc.io.out
 
 
 
@@ -61,13 +61,13 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   //mask,写表之前为0,写完表置1,程序运行完之后置0
   val cfg_mask = RegInit(0.U)
 
-  valid       := io.valid & cfg_mask
-  din_pc      := io.pc & Fill(40, cfg_mask)
-  din_ins     := io.ins & Fill(32, cfg_mask)
-  din_wdata   := io.wdata & Fill(64, cfg_mask)
-  din_mdata   := io.mdata & Fill(64, cfg_mask)
-  din_npc     := io.mem_npc & Fill(40, cfg_mask)
-  din_req_addr:= io.req_addr & Fill(40, cfg_mask)
+  valid       := io.valid.get & cfg_mask
+  din_pc      := io.pc.get & Fill(40, cfg_mask)
+  din_ins     := io.ins.get & Fill(32, cfg_mask)
+  din_wdata   := io.wdata.get & Fill(64, cfg_mask)
+  din_mdata   := io.mdata.get & Fill(64, cfg_mask)
+  din_npc     := io.mem_npc.get & Fill(40, cfg_mask)
+  din_req_addr:= io.req_addr.get & Fill(40, cfg_mask)
   
   //因为查表控制信号慢了1拍，所以数据也慢1拍
   val ins_r   = RegNext(din_ins,0.U)
@@ -151,7 +151,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
 
   
   //只要有一个不ready，就把主核stall住
-  io.fifo_ready := q(0).in.ready && q(1).in.ready && q(2).in.ready && q(3).in.ready && q(4).in.ready && q(5).in.ready && q(6).in.ready && q(7).in.ready
+  io.fifo_ready.get := q(0).in.ready && q(1).in.ready && q(2).in.ready && q(3).in.ready && q(4).in.ready && q(5).in.ready && q(6).in.ready && q(7).in.ready
   for(i<- List(0,3)){
     q(i).in.bits := cat.io.out
     //q(i).out.ready := io.fifo_io(i).ready
@@ -166,7 +166,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
     .otherwise{
       q(i).in.valid := false.B
     }
-    io.fifo_io(i) <> q(i).out
+    io.fifo_io.get(i) <> q(i).out
     dontTouch(q(i).count)
   }
   //asan要过滤一下
@@ -230,7 +230,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   }
 
   for(i<- List(1,2,4,5,6,7)){
-    io.fifo_io(i) <> q(i).out
+    io.fifo_io.get(i) <> q(i).out
   }
 
   //搞counter

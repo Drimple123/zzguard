@@ -411,7 +411,6 @@ class WithzzguardRoCC extends Config((site, here, up) => {
   case BuildRoCC => {
     val existingRoCCs = up(BuildRoCC, site)
     val tiles = up(TilesLocated(InSubsystem), site)
-    
     site(TileKey) match {
       case tile: RocketTileParams =>
         val tileId = tile.tileId
@@ -423,7 +422,12 @@ class WithzzguardRoCC extends Config((site, here, up) => {
               val zzguard = LazyModule(new zzguardrr_ram_new(OpcodeSet.custom0)(p))
               zzguard
             })
-          } else {
+          } else if(tileId == 1) {
+            List((p: Parameters) => {
+              val asan = LazyModule(new asan_rocc(OpcodeSet.custom0)(p))
+              asan
+            })
+          }else {
             List()
           }
         }

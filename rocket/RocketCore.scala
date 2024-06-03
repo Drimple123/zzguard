@@ -144,6 +144,8 @@ trait HasRocketCoreIO extends HasRocketCoreParameters {
     val ins   = Output(UInt(32.W))  //wb_reg_inst
     val wdata = Output(UInt(64.W))  //wb_reg_wdata
     val mdata = Output(UInt(64.W))  //mem_reg_wdata
+    val mem_npc= Output(UInt(40.W))
+    val req_addr= Output(UInt(40.W))
 
     // //val full_counter = Input(Bool()) //counter的fifo满了
      //val yaofull_counter = Input(Bool())
@@ -335,12 +337,12 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
   val wb_reg_wphit           = Reg(Vec(nBreakpoints, Bool()))
 
   //===== zzguardrrlht: Start ====//
-  io.rocc.valid  := wb_reg_valid
-  io.rocc.pc     := wb_reg_pc
-  io.rocc.ins    := wb_reg_inst
-  io.rocc.wdata  := wb_reg_wdata
+  // io.rocc.valid  := wb_reg_valid
+  // io.rocc.pc     := wb_reg_pc
+  // io.rocc.ins    := wb_reg_inst
+  // io.rocc.wdata  := wb_reg_wdata
   val mdata_r = RegNext(mem_reg_wdata, 0.U)
-  io.rocc.mdata  := mdata_r
+  // io.rocc.mdata  := mdata_r
   //===== zzguardrrlht: End   ====//
 
   //===== zzguardrr: Start ====//
@@ -350,6 +352,7 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
   io.wdata  := wb_reg_wdata
   //val mdata_r = RegNext(mem_reg_wdata, 0.U)
   io.mdata  := mdata_r
+
   //===== zzguardrr: End   ====//
 
   val take_pc_mem_wb = take_pc_wb || take_pc_mem
@@ -915,10 +918,10 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
 
 
   //zzguard
-  io.rocc.asan_io.ready := false.B//给rocc模块加io的,被迫加到了coreio上，给它填上，免得作妖
-  for(i<-0 to 7){
-    io.rocc.fifo_io(i).ready := false.B
-  }
+  // io.rocc.asan_io.ready := false.B//给rocc模块加io的,被迫加到了coreio上，给它填上，免得作妖
+  // for(i<-0 to 7){
+  //   io.rocc.fifo_io(i).ready := false.B
+  // }
   if(tileParams.tileId == 0){
      ctrl_stalld :=
     id_ex_hazard || id_mem_hazard || id_wb_hazard || id_sboard_hazard ||
@@ -1142,11 +1145,13 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
   io.dmem.req.bits.mask := DontCare
 
   val npc_r = RegNext(mem_npc, 0.U)
-  io.rocc.mem_npc := npc_r
+  //io.rocc.mem_npc := npc_r
+  io.mem_npc := npc_r
   val req_addr_w = encodeVirtualAddress(ex_rs(0), alu.io.adder_out)
   val req_addr_r = RegNext(req_addr_w, 0.U)
   val req_addr_rr= RegNext(req_addr_r, 0.U)
-  io.rocc.req_addr := req_addr_rr
+  //io.rocc.req_addr := req_addr_rr
+  io.req_addr := req_addr_rr
   
   
 
