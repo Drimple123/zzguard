@@ -74,7 +74,7 @@ class asan_rocc_Imp(outer: asan_rocc)(implicit p: Parameters) extends LazyRoCCMo
         dmem_req.bits.cmd := 0.U
         dmem_req.bits.size := 0.U
         dmem_req.bits.tag := 0.U
-        dmem_req.bits.phys := false.B //使用物理地址
+        dmem_req.bits.phys := false.B //使用虚拟地址
         dmem_req.bits.dprv := 3.U //权限为机器模式
         dmem_req.bits.dv := false.B //读请求，数据无效
         when (dmem_req.fire()) {

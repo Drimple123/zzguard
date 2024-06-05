@@ -299,30 +299,36 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     val ss = Module(new shadow_stack)
     ss.io.in <> q(0).deq
 
-    val mem_acc_fifo = VecInit(Seq.fill(2)(Module(new Queue((new mem_ac_io),16)).io))
+    //val mem_acc_fifo = VecInit(Seq.fill(2)(Module(new Queue((new mem_ac_io),16)).io))
     //接上3个asan
-    val Asan_1 = Module(new Asan_Imp_new(1))
-    val Asan_2 = Module(new Asan_Imp_new(3))
+    //val Asan_1 = Module(new Asan_Imp_new(1))
+    //val Asan_2 = Module(new Asan_Imp_new(3))
     //val Asan_3 = Module(new Asan_Imp_new(5))
 
-    Asan_1.io.rocc_in <> q_rocc.io.deq
-    Asan_1.io.din <> q(2).deq
+    // Asan_1.io.rocc_in <> q_rocc.io.deq
+    // Asan_1.io.din <> q(2).deq
 
-    Asan_2.io.rocc_in <> q_rocc.io.deq
-    Asan_2.io.din <> q(4).deq
+    // Asan_2.io.rocc_in <> q_rocc.io.deq
+    // Asan_2.io.din <> q(4).deq
 
     outer.roccs(0).module.io.rocc_in.get <> q_rocc.io.deq
-    outer.roccs(0).module.io.din.get <> q(5).deq
+    outer.roccs(0).module.io.din.get <> q(2).deq
+
+    outer.roccs(1).module.io.rocc_in.get <> q_rocc.io.deq
+    outer.roccs(1).module.io.din.get <> q(4).deq
+
+    outer.roccs(2).module.io.rocc_in.get <> q_rocc.io.deq
+    outer.roccs(2).module.io.din.get <> q(5).deq
     // Asan_3.io.rocc_in <> q_rocc.io.deq
     // Asan_3.io.din <> q(5).deq
     
-    Asan_1.io.valid_mem   := core.io.valid_mem.get
-    Asan_1.io.data_in     := core.io.asan_data_out.get
-    Asan_1.io.resp_tag    := core.io.resp_tag.get
+    // Asan_1.io.valid_mem   := core.io.valid_mem.get
+    // Asan_1.io.data_in     := core.io.asan_data_out.get
+    // Asan_1.io.resp_tag    := core.io.resp_tag.get
 
-    Asan_2.io.valid_mem   := core.io.valid_mem.get
-    Asan_2.io.data_in     := core.io.asan_data_out.get
-    Asan_2.io.resp_tag    := core.io.resp_tag.get
+    // Asan_2.io.valid_mem   := core.io.valid_mem.get
+    // Asan_2.io.data_in     := core.io.asan_data_out.get
+    // Asan_2.io.resp_tag    := core.io.resp_tag.get
 
     // Asan_3.io.valid_mem   := core.io.valid_mem.get
     // Asan_3.io.data_in     := core.io.asan_data_out.get
@@ -330,11 +336,11 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
 
 
     //Asan_1.io.chosen      := core.io.arb_chosen.get
-    mem_acc_fifo(0).enq <> Asan_1.io.mem_acc_io
-    core.io.mem_acc_io.get(0) <> mem_acc_fifo(0).deq
+    // mem_acc_fifo(0).enq <> Asan_1.io.mem_acc_io
+    // core.io.mem_acc_io.get(0) <> mem_acc_fifo(0).deq
 
-    mem_acc_fifo(1).enq <> Asan_2.io.mem_acc_io
-    core.io.mem_acc_io.get(1) <> mem_acc_fifo(1).deq
+    // mem_acc_fifo(1).enq <> Asan_2.io.mem_acc_io
+    // core.io.mem_acc_io.get(1) <> mem_acc_fifo(1).deq
 
     // mem_acc_fifo(2).enq <> Asan_3.io.mem_acc_io
     // core.io.mem_acc_io.get(2) <> mem_acc_fifo(2).deq
