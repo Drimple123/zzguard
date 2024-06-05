@@ -139,13 +139,22 @@ trait HasRocketCoreIO extends HasRocketCoreParameters {
     val traceStall = Input(Bool())
 
      //===== zzguardrr: Start ====//
-    val valid = Output(Bool())      //wb_reg_valid
-    val pc    = Output(UInt(40.W))  //wb_reg_pc
-    val ins   = Output(UInt(32.W))  //wb_reg_inst
-    val wdata = Output(UInt(64.W))  //wb_reg_wdata
-    val mdata = Output(UInt(64.W))  //mem_reg_wdata
-    val mem_npc= Output(UInt(40.W))
-    val req_addr= Output(UInt(40.W))
+    // val valid = Output(Bool())      //wb_reg_valid
+    // val pc    = Output(UInt(40.W))  //wb_reg_pc
+    // val ins   = Output(UInt(32.W))  //wb_reg_inst
+    // val wdata = Output(UInt(64.W))  //wb_reg_wdata
+    // val mdata = Output(UInt(64.W))  //mem_reg_wdata
+    // val mem_npc= Output(UInt(40.W))
+    // val req_addr= Output(UInt(40.W))
+
+    val valid = if(tileParams.tileId == 0) Some(Output(Bool())) else None
+    val pc = if(tileParams.tileId == 0) Some(Output(UInt(40.W))) else None
+    val ins = if(tileParams.tileId == 0) Some(Output(UInt(32.W))) else None
+    val wdata = if(tileParams.tileId == 0) Some(Output(UInt(64.W))) else None
+    val mdata = if(tileParams.tileId == 0) Some(Output(UInt(64.W))) else None
+    val mem_npc = if(tileParams.tileId == 0) Some(Output(UInt(40.W))) else None
+    val req_addr = if(tileParams.tileId == 0) Some(Output(UInt(40.W))) else None
+    
 
     // //val full_counter = Input(Bool()) //counter的fifo满了
      //val yaofull_counter = Input(Bool())
@@ -167,7 +176,7 @@ trait HasRocketCoreIO extends HasRocketCoreParameters {
     //val asan_data_in = if(tileParams.tileId == 1) Some(Input(UInt(8.W))) else None
     //val asan_cmd = if(tileParams.tileId == 1) Some(Input(UInt(5.W))) else None
     //val asan_valid = if(tileParams.tileId == 1) Some(Input(Bool())) else None
-    val mem_acc_io = if(tileParams.tileId == 1) Some(Vec(3,(Flipped(Decoupled(new mem_ac_io))))) else None
+    val mem_acc_io = if(tileParams.tileId == 1) Some(Vec(2,(Flipped(Decoupled(new mem_ac_io))))) else None
     val mem_acc_io_row = if(tileParams.tileId == 1) Some((Flipped(Decoupled(new mem_ac_io)))) else None
 
 
@@ -341,17 +350,13 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
   // io.rocc.pc     := wb_reg_pc
   // io.rocc.ins    := wb_reg_inst
   // io.rocc.wdata  := wb_reg_wdata
-  val mdata_r = RegNext(mem_reg_wdata, 0.U)
+  
   // io.rocc.mdata  := mdata_r
   //===== zzguardrrlht: End   ====//
 
   //===== zzguardrr: Start ====//
-  io.valid  := wb_reg_valid
-  io.pc     := wb_reg_pc
-  io.ins    := wb_reg_inst
-  io.wdata  := wb_reg_wdata
-  //val mdata_r = RegNext(mem_reg_wdata, 0.U)
-  io.mdata  := mdata_r
+  
+  
 
   //===== zzguardrr: End   ====//
 
@@ -1039,7 +1044,7 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
     // }
     
     //arbiter, 核优先版
-    val arb_mem = Module(new Arbiter((new mem_ac_io), 5))
+    val arb_mem = Module(new Arbiter((new mem_ac_io), 4))
     io.dmem.req.valid := arb_mem.io.out.valid
     arb_mem.io.out.ready := io.dmem.req.ready
     arb_mem.io.in(0).valid := ex_reg_valid && ex_ctrl.mem
@@ -1049,7 +1054,7 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
     arb_mem.io.in(0).bits.size := ex_reg_mem_size
     arb_mem.io.in(2) <> io.mem_acc_io.get(0)
     arb_mem.io.in(3) <> io.mem_acc_io.get(1)
-    arb_mem.io.in(4) <> io.mem_acc_io.get(2)
+    //arb_mem.io.in(4) <> io.mem_acc_io.get(2)
 
     arb_mem.io.in(1) <> io.mem_acc_io_row.get
 
@@ -1144,16 +1149,24 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
   io.dmem.req.bits.data := DontCare
   io.dmem.req.bits.mask := DontCare
 
-  val npc_r = RegNext(mem_npc, 0.U)
-  //io.rocc.mem_npc := npc_r
-  io.mem_npc := npc_r
-  val req_addr_w = encodeVirtualAddress(ex_rs(0), alu.io.adder_out)
-  val req_addr_r = RegNext(req_addr_w, 0.U)
-  val req_addr_rr= RegNext(req_addr_r, 0.U)
-  //io.rocc.req_addr := req_addr_rr
-  io.req_addr := req_addr_rr
   
   
+  if(tileParams.tileId == 0){
+    io.valid.get  := wb_reg_valid
+    io.pc.get     := wb_reg_pc
+    io.ins.get    := wb_reg_inst
+    io.wdata.get  := wb_reg_wdata
+    //val mdata_r = RegNext(mem_reg_wdata, 0.U)
+    val mdata_r = RegNext(mem_reg_wdata, 0.U)
+    io.mdata.get  := mdata_r
+    val npc_r = RegNext(mem_npc, 0.U)
+    io.mem_npc.get := npc_r
+    val req_addr_w = encodeVirtualAddress(ex_rs(0), alu.io.adder_out)
+    val req_addr_r = RegNext(req_addr_w, 0.U)
+    val req_addr_rr= RegNext(req_addr_r, 0.U)
+    io.req_addr.get := req_addr_rr
+    
+  }
 
 
   // io.dmem.s1_data.data := (if (fLen == 0) mem_reg_rs2 else Mux(mem_ctrl.fp, Fill((xLen max fLen) / fLen, io.fpu.store_data), mem_reg_rs2))

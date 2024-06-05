@@ -80,7 +80,10 @@ class RoCCIO(val nPTWPorts: Int, nRoCCCSRs: Int)(implicit p: Parameters) extends
   val fpu_req = Decoupled(new FPInput)
   val fpu_resp = Flipped(Decoupled(new FPResult))
   //asan_rocc
-  val gaga = if(tileParams.tileId == 1) Some(Input(UInt(40.W))) else None
+  //val gaga = if(tileParams.tileId == 1) Some(Input(UInt(40.W))) else None
+
+  val din = if(tileParams.tileId == 1) Some(Flipped(Decoupled(UInt(160.W)))) else None
+  val rocc_in = if(tileParams.tileId == 1) Some(Flipped(Decoupled(UInt(55.W)))) else None
 
   //zzguard
   val valid = if(tileParams.tileId == 0) Some(Input(Bool())) else None

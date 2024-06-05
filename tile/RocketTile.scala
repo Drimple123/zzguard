@@ -177,7 +177,7 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
 
   if(outer.rocketParams.tileId == 0){
     println("######zzguard###########   tileid: ",outer.rocketParams.tileId,"  ############")
-    outer.ins_tile_out.get.bundle := core.io.ins
+    outer.ins_tile_out.get.bundle := core.io.ins.get
     //rocc
     // outer.addr_out.get.bundle := outer.roccs(0).module.io.asan_addr
     // outer.size_out.get.bundle := outer.roccs(0).module.io.asan_size
@@ -195,14 +195,13 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     outer.roccs(0).module.io.asan_io.get.ready := outer.rocc_ready_in.get.bundle
 
     //新的直接从core里面拉到zzguard的一条路
-    outer.roccs(0).module.io.valid.get := core.io.valid
-    outer.roccs(0).module.io.pc.get := core.io.pc
-    outer.roccs(0).module.io.ins.get := core.io.ins
-    outer.roccs(0).module.io.wdata.get := core.io.wdata
-    outer.roccs(0).module.io.mdata.get := core.io.mdata
-    outer.roccs(0).module.io.mem_npc.get := core.io.mem_npc
-    outer.roccs(0).module.io.req_addr.get := core.io.req_addr
-    outer.roccs(0).module.io.pc.get := core.io.pc
+    outer.roccs(0).module.io.valid.get := core.io.valid.get
+    outer.roccs(0).module.io.pc.get := core.io.pc.get
+    outer.roccs(0).module.io.ins.get := core.io.ins.get
+    outer.roccs(0).module.io.wdata.get := core.io.wdata.get
+    outer.roccs(0).module.io.mdata.get := core.io.mdata.get
+    outer.roccs(0).module.io.mem_npc.get := core.io.mem_npc.get
+    outer.roccs(0).module.io.req_addr.get := core.io.req_addr.get
     
 
 
@@ -256,7 +255,7 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     // core.io.lors_addr.get := outer.lors_addr_in.get.bundle
     //outer.lors_ready_out.get.bundle := core.io.ready_out.get
 
-    outer.roccs(0).module.io.gaga.get := core.io.ins
+    //outer.roccs(0).module.io.gaga.get := 1.U
     
 
     // outer.roccs(0).module.io.asan_io.ready := true.B
@@ -300,11 +299,11 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     val ss = Module(new shadow_stack)
     ss.io.in <> q(0).deq
 
-    val mem_acc_fifo = VecInit(Seq.fill(3)(Module(new Queue((new mem_ac_io),16)).io))
+    val mem_acc_fifo = VecInit(Seq.fill(2)(Module(new Queue((new mem_ac_io),16)).io))
     //接上3个asan
     val Asan_1 = Module(new Asan_Imp_new(1))
     val Asan_2 = Module(new Asan_Imp_new(3))
-    val Asan_3 = Module(new Asan_Imp_new(5))
+    //val Asan_3 = Module(new Asan_Imp_new(5))
 
     Asan_1.io.rocc_in <> q_rocc.io.deq
     Asan_1.io.din <> q(2).deq
@@ -312,8 +311,10 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     Asan_2.io.rocc_in <> q_rocc.io.deq
     Asan_2.io.din <> q(4).deq
 
-    Asan_3.io.rocc_in <> q_rocc.io.deq
-    Asan_3.io.din <> q(5).deq
+    outer.roccs(0).module.io.rocc_in.get <> q_rocc.io.deq
+    outer.roccs(0).module.io.din.get <> q(5).deq
+    // Asan_3.io.rocc_in <> q_rocc.io.deq
+    // Asan_3.io.din <> q(5).deq
     
     Asan_1.io.valid_mem   := core.io.valid_mem.get
     Asan_1.io.data_in     := core.io.asan_data_out.get
@@ -323,9 +324,9 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     Asan_2.io.data_in     := core.io.asan_data_out.get
     Asan_2.io.resp_tag    := core.io.resp_tag.get
 
-    Asan_3.io.valid_mem   := core.io.valid_mem.get
-    Asan_3.io.data_in     := core.io.asan_data_out.get
-    Asan_3.io.resp_tag    := core.io.resp_tag.get
+    // Asan_3.io.valid_mem   := core.io.valid_mem.get
+    // Asan_3.io.data_in     := core.io.asan_data_out.get
+    // Asan_3.io.resp_tag    := core.io.resp_tag.get
 
 
     //Asan_1.io.chosen      := core.io.arb_chosen.get
@@ -335,8 +336,8 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     mem_acc_fifo(1).enq <> Asan_2.io.mem_acc_io
     core.io.mem_acc_io.get(1) <> mem_acc_fifo(1).deq
 
-    mem_acc_fifo(2).enq <> Asan_3.io.mem_acc_io
-    core.io.mem_acc_io.get(2) <> mem_acc_fifo(2).deq
+    // mem_acc_fifo(2).enq <> Asan_3.io.mem_acc_io
+    // core.io.mem_acc_io.get(2) <> mem_acc_fifo(2).deq
 
     //core.io.asan_valid.get := Asan_1.io.out_valid
     //core.io.asan_addr.get := Asan_1.io.out_addr

@@ -56,7 +56,8 @@ class Asan_Imp_new(tag: Int) extends Module{
     //val out_valid_w = WireDefault(false.B)
 
     // val ready_r = RegInit(true.B)
-    // val ready_rr= RegInit(true.B)
+    // val ready_rr= RegInit(true.B)val gaga = io.gaga.get
+      //dontTouch(gaga)
     //val ready_w = WireDefault(true.B)
     //rocc来的数据解码
     val in_addr = io.rocc_in.bits(54,15)
