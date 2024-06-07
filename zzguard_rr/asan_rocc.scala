@@ -43,7 +43,7 @@ class asan_rocc_Imp(outer: asan_rocc)(implicit p: Parameters) extends LazyRoCCMo
     }
     //把访存地址移位并加上偏移地址, 映射到shadow mem的对应位置
     val fifo_addr = (lors_addr >> 5.U) + offset
-
+    dontTouch(lors_addr)
     val s_idle :: s_read_req :: s_read_resp :: Nil = Enum(3)
     val state = RegInit(s_idle)
     val dmem_req = io.mem.req
@@ -60,7 +60,7 @@ class asan_rocc_Imp(outer: asan_rocc)(implicit p: Parameters) extends LazyRoCCMo
     switch (state) {
       is (s_idle) {
         dmem_req.valid := false.B
-        when (!ready_r && mask) {
+        when (io.din.get.fire && mask) {
           state := s_read_req
         }
         .otherwise{
@@ -75,7 +75,7 @@ class asan_rocc_Imp(outer: asan_rocc)(implicit p: Parameters) extends LazyRoCCMo
         dmem_req.bits.size := 0.U
         dmem_req.bits.tag := 0.U
         dmem_req.bits.phys := false.B //使用虚拟地址
-        dmem_req.bits.dprv := 0.U //权限为用户模式
+        dmem_req.bits.dprv := 3.U //权限为机器模式
         dmem_req.bits.dv := false.B //读请求，数据无效
         when (dmem_req.fire()) {
           state := s_read_resp
