@@ -319,7 +319,7 @@ class TLB(instruction: Boolean, lgMaxSize: Int, cfg: TLBConfig)(implicit edge: T
     val kill = Input(Bool())
   })
   io.ptw.customCSRs := DontCare
-
+  dontTouch(io)
   val pageGranularityPMPs = pmpGranularity >= (1 << pgIdxBits)
   val vpn = io.req.bits.vaddr(vaddrBits-1, pgIdxBits)
   /** index for sectored_Entry */
@@ -576,6 +576,8 @@ class TLB(instruction: Boolean, lgMaxSize: Int, cfg: TLBConfig)(implicit edge: T
 
   // access exception needs SoC information from PMA
   val ae_ld_array = Mux(cmd_read, ae_array | ~pr_array, 0.U)
+  dontTouch(ae_array)
+  dontTouch(pr_array)
   val ae_st_array =
     Mux(cmd_write_perms, ae_array | ~pw_array, 0.U) |
     Mux(cmd_put_partial, ~ppp_array_if_cached, 0.U) |
@@ -631,6 +633,7 @@ class TLB(instruction: Boolean, lgMaxSize: Int, cfg: TLBConfig)(implicit edge: T
   io.resp.gf.inst := bad_gpa || (gf_inst_array & hits).orR
   // access exception
   io.resp.ae.ld := (ae_ld_array & hits).orR
+  dontTouch(ae_ld_array)
   io.resp.ae.st := (ae_st_array & hits).orR
   io.resp.ae.inst := (~px_array & hits).orR
   // misaligned
