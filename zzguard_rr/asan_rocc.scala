@@ -94,7 +94,7 @@ class asan_rocc_Imp(outer: asan_rocc)(implicit p: Parameters) extends LazyRoCCMo
             overflow_r:= false.B
       
         }
-        .elsewhen(dmem_resp.bits.data >= addr_fifo_r){
+        .elsewhen(dmem_resp.bits.data >= addr_fifo_r(4,0)){
             uaf_r     := false.B
             can_use_r := true.B
             overflow_r:= false.B
