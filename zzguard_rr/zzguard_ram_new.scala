@@ -169,7 +169,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
     io.fifo_io.get(i) <> q(i).out
     dontTouch(q(i).count)
   }
-  //asan要过滤一下
+  
   for(i <- List(1,2,4,5,6,7)){
     q(i).in.bits := cat.io.out
   }
@@ -192,8 +192,8 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   // }
 
 
-  val rr_asan = Module(new fsm_rr(2,4,5))
-  val rr_counter= Module(new fsm_rr(1,6,7))
+  val rr_asan = Module(new fsm_rr_seq(Seq(2,4,5)))
+  val rr_counter= Module(new fsm_rr_seq(Seq(1,6,7)))
   dontTouch(q(4))
   dontTouch(q(5))
   dontTouch(q(6))
