@@ -44,7 +44,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   val packet_mid  = Wire(UInt(48.W))
   packet_mid := Cat(cmd.bits.rs1(39,0), cmd.bits.rs2(7,0))
   rocc_packet := Cat(packet_mid, cmd.bits.inst.funct)
-  val q_rocc = Module(new fifox(55, 32, 5))
+  val q_rocc = Module(new fifox(55, 32, 10))
   q_rocc.io.in.bits := rocc_packet
   io.asan_io.get <> q_rocc.io.out
 
@@ -147,11 +147,11 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
 
   //val q = VecInit(Seq.fill(2)(Module(new asyncfifo(16, 160)).io))
   //q0是ss,q1是counter，q2是asan0，q3是rowhammer，q4和q5是asan1和asan2,q6和q7是counter1和2
-  val q = VecInit(Seq.fill(8)(Module(new fifox(160, 32, 5)).io))
+  val q = VecInit(Seq.fill(9)(Module(new fifox(160, 32, 10)).io))
 
   
   //只要有一个不ready，就把主核stall住
-  io.fifo_ready.get := q(0).in.ready && q(1).in.ready && q(2).in.ready && q(3).in.ready && q(4).in.ready && q(5).in.ready && q(6).in.ready && q(7).in.ready
+  io.fifo_ready.get := q(0).in.ready && q(1).in.ready && q(2).in.ready && q(3).in.ready && q(4).in.ready && q(5).in.ready && q(6).in.ready && q(7).in.ready && q(8).in.ready
   for(i<- List(0,3)){
     q(i).in.bits := cat.io.out
     //q(i).out.ready := io.fifo_io(i).ready
@@ -170,7 +170,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
     dontTouch(q(i).count)
   }
   
-  for(i <- List(1,2,4,5,6,7)){
+  for(i <- List(1,2,4,5,6,7,8)){
     q(i).in.bits := cat.io.out
   }
   //q(2).out.ready := io.fifo_io(2).ready
@@ -192,12 +192,13 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   // }
 
 
-  val rr_asan = Module(new fsm_rr_seq(Seq(2,4,5)))
+  val rr_asan = Module(new fsm_rr_seq(Seq(2)))
   val rr_counter= Module(new fsm_rr_seq(Seq(1,6,7)))
   dontTouch(q(4))
   dontTouch(q(5))
   dontTouch(q(6))
   dontTouch(q(7))
+  dontTouch(q(8))
   // q(1).out.ready := true.B
   // q(6).out.ready := true.B
   // q(7).out.ready := true.B
@@ -205,7 +206,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   when(valid_r){
     when(bitmap(2) === 1.U){
         rr_asan.io.en := true.B
-        for(i<- List(2,4,5)){
+        for(i<- List(2,4,5,8)){
           when(rr_asan.io.num === i.U){
             q(i).in.valid := true.B
           }
@@ -219,6 +220,8 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
       q(2).in.valid := false.B
       q(4).in.valid := false.B
       q(5).in.valid := false.B
+      q(8).in.valid := false.B
+
     }
   }
   .otherwise{
@@ -226,10 +229,11 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
     q(2).in.valid := false.B
     q(4).in.valid := false.B
     q(5).in.valid := false.B
+    q(8).in.valid := false.B
     
   }
 
-  for(i<- List(1,2,4,5,6,7)){
+  for(i<- List(1,2,4,5,6,7,8)){
     io.fifo_io.get(i) <> q(i).out
   }
 

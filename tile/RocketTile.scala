@@ -183,7 +183,7 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     // outer.size_out.get.bundle := outer.roccs(0).module.io.asan_size
     // outer.valid_out.get.bundle := outer.roccs(0).module.io.asan_valid
     // outer.funct_out.get.bundle := outer.roccs(0).module.io.asan_funct
-    for(i<-0 to 7){
+    for(i<-0 to 8){
       outer.data_bits_out_nodes.get(i).bundle:= outer.roccs(0).module.io.fifo_io.get(i).bits
       outer.data_valid_out_nodes.get(i).bundle:= outer.roccs(0).module.io.fifo_io.get(i).valid
       outer.roccs(0).module.io.fifo_io.get(i).ready := outer.data_ready_in_nodes.get(i).bundle
@@ -263,11 +263,11 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     //   outer.roccs(0).module.io.fifo_io(i).ready := true.B
     // }
 
-    val q = VecInit(Seq.fill(8)(Module(new Queue(UInt(160.W), 32)).io))
-    for(i<-0 to 7){
+    val q = VecInit(Seq.fill(9)(Module(new Queue(UInt(160.W), 32)).io))
+    for(i<-0 to 8){
       dontTouch(q(i).deq)
     }
-    for(i<-0 to 7){
+    for(i<-0 to 8){
       q(i).enq.bits := outer.data_bits_in_nodes.get(i).bundle
       q(i).enq.valid := outer.data_valid_in_nodes.get(i).bundle
       outer.data_ready_out_nodes.get(i).bundle := q(i).enq.ready
@@ -319,6 +319,11 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
 
     outer.roccs(2).module.io.rocc_in.get <> q_rocc.io.deq
     outer.roccs(2).module.io.din.get <> q(5).deq
+
+    outer.roccs(3).module.io.rocc_in.get <> q_rocc.io.deq
+    outer.roccs(3).module.io.din.get <> q(8).deq
+
+
     // Asan_3.io.rocc_in <> q_rocc.io.deq
     // Asan_3.io.din <> q(5).deq
     

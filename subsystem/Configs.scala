@@ -435,7 +435,12 @@ class WithzzguardRoCC extends Config((site, here, up) => {
               (p: Parameters) => {
               val asan_2 = LazyModule(new asan_rocc(OpcodeSet.custom2)(p))
               asan_2
+              },
+              (p: Parameters) => {
+              val asan_3 = LazyModule(new asan_rocc(OpcodeSet.custom3)(p))
+              asan_3
               }
+
 
             )
           }else {

@@ -96,7 +96,7 @@ class RoCCIO(val nPTWPorts: Int, nRoCCCSRs: Int)(implicit p: Parameters) extends
 
   val asan_io = if(tileParams.tileId == 0) Some(Decoupled(UInt(55.W))) else None
   val fifo_ready = if(tileParams.tileId == 0) Some(Output(Bool())) else None
-  val fifo_io = if(tileParams.tileId == 0) Some(Vec(8, Decoupled(UInt(160.W)))) else None
+  val fifo_io = if(tileParams.tileId == 0) Some(Vec(9, Decoupled(UInt(160.W)))) else None
 
 
 
