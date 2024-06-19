@@ -183,7 +183,7 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     // outer.size_out.get.bundle := outer.roccs(0).module.io.asan_size
     // outer.valid_out.get.bundle := outer.roccs(0).module.io.asan_valid
     // outer.funct_out.get.bundle := outer.roccs(0).module.io.asan_funct
-    for(i<-0 to 8){
+    for(i<-0 to 10){
       outer.data_bits_out_nodes.get(i).bundle:= outer.roccs(0).module.io.fifo_io.get(i).bits
       outer.data_valid_out_nodes.get(i).bundle:= outer.roccs(0).module.io.fifo_io.get(i).valid
       outer.roccs(0).module.io.fifo_io.get(i).ready := outer.data_ready_in_nodes.get(i).bundle
@@ -263,11 +263,18 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     //   outer.roccs(0).module.io.fifo_io(i).ready := true.B
     // }
 
-    val q = VecInit(Seq.fill(9)(Module(new Queue(UInt(160.W), 32)).io))
-    for(i<-0 to 8){
+    val q = VecInit(Seq.fill(11)(Module(new Queue(UInt(160.W), 32)).io))
+    val q_full_counter = RegInit(VecInit(Seq.fill(11)(0.U(32.W))))
+    dontTouch(q_full_counter)
+    for(i <- 0 to 10){
+      when(q(i).count === 32.U){
+        q_full_counter(i) := q_full_counter(i) + 1.U
+      }
+    }
+    for(i<-0 to 10){
       dontTouch(q(i).deq)
     }
-    for(i<-0 to 8){
+    for(i<-0 to 10){
       q(i).enq.bits := outer.data_bits_in_nodes.get(i).bundle
       q(i).enq.valid := outer.data_valid_in_nodes.get(i).bundle
       outer.data_ready_out_nodes.get(i).bundle := q(i).enq.ready
@@ -286,13 +293,17 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     dontTouch(q_rocc.io)
     //接上counter_losuan
     //val counter_losuan_1 = Module(new counter_losuan)
-    val counter_ls = VecInit(Seq.fill(3)(Module(new counter_losuan).io))
+    val counter_ls = VecInit(Seq.fill(5)(Module(new counter_losuan).io))
     //counter_losuan_1.io.enq <> q(1).deq
     counter_ls(0).enq <> q(1).deq
     counter_ls(1).enq <> q(6).deq
     counter_ls(2).enq <> q(7).deq
+    counter_ls(3).enq <> q(9).deq
+    counter_ls(4).enq <> q(10).deq
+
+    
     //把3个counter的结果合起来
-    val num_ls = counter_ls(0).number_losuan + counter_ls(1).number_losuan + counter_ls(2).number_losuan
+    val num_ls = counter_ls(0).number_losuan + counter_ls(1).number_losuan + counter_ls(2).number_losuan + counter_ls(3).number_losuan + counter_ls(4).number_losuan
     dontTouch(num_ls)
 
     //接上ss

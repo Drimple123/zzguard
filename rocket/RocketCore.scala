@@ -1130,6 +1130,15 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
     io.dmem.req.bits.size := ex_reg_mem_size
     io.dmem.s1_kill := killm_common || mem_ldst_xcpt || fpu_kill_mem
   }
+  else{
+    io.dmem.req.valid     := ex_reg_valid && ex_ctrl.mem
+    io.dmem.req.bits.tag  := ex_dcache_tag
+    io.dmem.req.bits.cmd  := ex_ctrl.mem_cmd
+    io.dmem.req.bits.addr := encodeVirtualAddress(ex_rs(0), alu.io.adder_out)
+    io.dmem.s1_data.data := (if (fLen == 0) mem_reg_rs2 else Mux(mem_ctrl.fp, Fill((xLen max fLen) / fLen, io.fpu.store_data), mem_reg_rs2))
+    io.dmem.req.bits.size := ex_reg_mem_size
+    io.dmem.s1_kill := killm_common || mem_ldst_xcpt || fpu_kill_mem
+  }
   // io.dmem.req.valid     := ex_reg_valid && ex_ctrl.mem
   // val ex_dcache_tag = Cat(ex_waddr, ex_ctrl.fp)
   // require(coreParams.dcacheReqTagBits >= ex_dcache_tag.getWidth)

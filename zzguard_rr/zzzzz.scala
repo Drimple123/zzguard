@@ -89,7 +89,7 @@ class fifox(width: Int, depth: Int, x: Int) extends Module{
     val (cnt, yes) = Counter(true.B, x);
 
     io.out.bits := q.io.deq.bits
-    when(cnt === 0.U){
+    when(cnt === 3.U){
         io.out.valid := q.io.deq.valid
         q.io.deq.ready := io.out.ready
     }

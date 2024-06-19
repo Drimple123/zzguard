@@ -176,9 +176,9 @@ trait DefaultHierarchicalElementContextType
   // val size_mid  = BundleBridgeIdentityNode[UInt]()
   // val valid_mid = BundleBridgeIdentityNode[Bool]()
   // val funct_mid = BundleBridgeIdentityNode[UInt]()
-  val data_bits_mid = Seq.fill(9)(BundleBridgeIdentityNode[UInt]())
-  val data_valid_mid = Seq.fill(9)(BundleBridgeIdentityNode[Bool]())
-  val data_ready_mid = Seq.fill(9)(BundleBridgeIdentityNode[Bool]())
+  val data_bits_mid = Seq.fill(11)(BundleBridgeIdentityNode[UInt]())
+  val data_valid_mid = Seq.fill(11)(BundleBridgeIdentityNode[Bool]())
+  val data_ready_mid = Seq.fill(11)(BundleBridgeIdentityNode[Bool]())
 
   val rocc_valid_mid = BundleBridgeIdentityNode[Bool]()
   val rocc_bits_mid = BundleBridgeIdentityNode[UInt]()
