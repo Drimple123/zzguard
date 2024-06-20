@@ -166,33 +166,61 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
 
   //===== zzguardrr: Start ====//
   //给rocc模块加io的,被迫加到了coreio上，给它填上，免得作妖
-  val fill_dataIO = VecInit(Seq.fill(4)(Module(new fill_laji_io(160)).io))
-  for(i<-0 to 3){
-    core.io.rocc.fifo_io(i) <> fill_dataIO(i).deq
-  }
+  // val fill_dataIO = VecInit(Seq.fill(8)(Module(new fill_laji_io(160)).io))
+  // for(i<-0 to 7){
+  //   core.io.rocc.fifo_io(i) <> fill_dataIO(i).deq
+  // }
 
-  val fill_asanIO = Module(new fill_laji_io(55))
-  core.io.rocc.asan_io <> fill_asanIO.io.deq
-  core.io.rocc.fifo_ready := false.B
+  // val fill_asanIO = Module(new fill_laji_io(55))
+  // core.io.rocc.asan_io <> fill_asanIO.io.deq
+  // core.io.rocc.fifo_ready := false.B
 
   if(outer.rocketParams.tileId == 0){
     println("######zzguard###########   tileid: ",outer.rocketParams.tileId,"  ############")
-    outer.ins_tile_out.get.bundle := core.io.ins
+    outer.ins_tile_out.get.bundle := core.io.ins.get
     //rocc
     // outer.addr_out.get.bundle := outer.roccs(0).module.io.asan_addr
     // outer.size_out.get.bundle := outer.roccs(0).module.io.asan_size
     // outer.valid_out.get.bundle := outer.roccs(0).module.io.asan_valid
     // outer.funct_out.get.bundle := outer.roccs(0).module.io.asan_funct
-    for(i<-0 to 3){
-      outer.data_bits_out_nodes.get(i).bundle:= outer.roccs(0).module.io.fifo_io(i).bits
-      outer.data_valid_out_nodes.get(i).bundle:= outer.roccs(0).module.io.fifo_io(i).valid
-      outer.roccs(0).module.io.fifo_io(i).ready := outer.data_ready_in_nodes.get(i).bundle
+    for(i<-0 to 10){
+      outer.data_bits_out_nodes.get(i).bundle:= outer.roccs(0).module.io.fifo_io.get(i).bits
+      outer.data_valid_out_nodes.get(i).bundle:= outer.roccs(0).module.io.fifo_io.get(i).valid
+      outer.roccs(0).module.io.fifo_io.get(i).ready := outer.data_ready_in_nodes.get(i).bundle
 
     }
-    core.io.ready_stall.get := outer.roccs(0).module.io.fifo_ready
-    outer.rocc_bits_out.get.bundle := outer.roccs(0).module.io.asan_io.bits
-    outer.rocc_valid_out.get.bundle := outer.roccs(0).module.io.asan_io.valid
-    outer.roccs(0).module.io.asan_io.ready := outer.rocc_ready_in.get.bundle
+
+    for((i,j) <- List((11,0),(12,1),(13,2))){
+      outer.data_bits_out_nodes_2.get(j).bundle:= outer.roccs(0).module.io.fifo_io.get(i).bits
+      outer.data_valid_out_nodes_2.get(j).bundle:= outer.roccs(0).module.io.fifo_io.get(i).valid
+      outer.roccs(0).module.io.fifo_io.get(i).ready := outer.data_ready_in_nodes_2.get(j).bundle
+
+    }
+
+    
+
+    
+
+    core.io.ready_stall.get := outer.roccs(0).module.io.fifo_ready.get
+    outer.rocc_bits_out.get.bundle := outer.roccs(0).module.io.asan_io.get(0).bits
+    outer.rocc_valid_out.get.bundle := outer.roccs(0).module.io.asan_io.get(0).valid
+    outer.roccs(0).module.io.asan_io.get(0).ready := outer.rocc_ready_in.get.bundle
+
+    outer.rocc_bits_out_2.get.bundle := outer.roccs(0).module.io.asan_io.get(1).bits
+    outer.rocc_valid_out_2.get.bundle := outer.roccs(0).module.io.asan_io.get(1).valid
+    outer.roccs(0).module.io.asan_io.get(1).ready := outer.rocc_ready_in_2.get.bundle
+
+    //新的直接从core里面拉到zzguard的一条路
+    outer.roccs(0).module.io.valid.get := core.io.valid.get
+    outer.roccs(0).module.io.pc.get := core.io.pc.get
+    outer.roccs(0).module.io.ins.get := core.io.ins.get
+    outer.roccs(0).module.io.wdata.get := core.io.wdata.get
+    outer.roccs(0).module.io.mdata.get := core.io.mdata.get
+    outer.roccs(0).module.io.mem_npc.get := core.io.mem_npc.get
+    outer.roccs(0).module.io.req_addr.get := core.io.req_addr.get
+    
+
+
 
     //asan的小filter，如果ins是load or store ， valid 拉高
     // val asan_filter_1 = Module(new asan_filter)
@@ -243,11 +271,26 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     // core.io.lors_addr.get := outer.lors_addr_in.get.bundle
     //outer.lors_ready_out.get.bundle := core.io.ready_out.get
 
-    val q = VecInit(Seq.fill(4)(Module(new Queue(UInt(160.W), 32)).io))
-    for(i<-0 to 3){
+    //outer.roccs(0).module.io.gaga.get := 1.U
+    
+
+    // outer.roccs(0).module.io.asan_io.ready := true.B
+    // for(i <-0 to 7){
+    //   outer.roccs(0).module.io.fifo_io(i).ready := true.B
+    // }
+
+    val q = VecInit(Seq.fill(11)(Module(new Queue(UInt(160.W), 32)).io))
+    val q_full_counter = RegInit(VecInit(Seq.fill(11)(0.U(32.W))))
+    dontTouch(q_full_counter)
+    for(i <- 0 to 10){
+      when(q(i).count === 32.U){
+        q_full_counter(i) := q_full_counter(i) + 1.U
+      }
+    }
+    for(i<-0 to 10){
       dontTouch(q(i).deq)
     }
-    for(i<-0 to 3){
+    for(i<-0 to 10){
       q(i).enq.bits := outer.data_bits_in_nodes.get(i).bundle
       q(i).enq.valid := outer.data_valid_in_nodes.get(i).bundle
       outer.data_ready_out_nodes.get(i).bundle := q(i).enq.ready
@@ -261,26 +304,78 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     q_rocc.io.enq.valid := outer.rocc_valid_in.get.bundle
     outer.rocc_ready_out.get.bundle := q_rocc.io.enq.ready
     
+
+
     dontTouch(q_rocc.io)
     //接上counter_losuan
-    val counter_losuan_1 = Module(new counter_losuan)
-    counter_losuan_1.io.enq <> q(1).deq
+    //val counter_losuan_1 = Module(new counter_losuan)
+    val counter_ls = VecInit(Seq.fill(5)(Module(new counter_losuan).io))
+    //counter_losuan_1.io.enq <> q(1).deq
+    counter_ls(0).enq <> q(1).deq
+    counter_ls(1).enq <> q(6).deq
+    counter_ls(2).enq <> q(7).deq
+    counter_ls(3).enq <> q(9).deq
+    counter_ls(4).enq <> q(10).deq
+
+    
+    //把3个counter的结果合起来
+    val num_ls = counter_ls(0).number_losuan + counter_ls(1).number_losuan + counter_ls(2).number_losuan + counter_ls(3).number_losuan + counter_ls(4).number_losuan
+    dontTouch(num_ls)
+
     //接上ss
     val ss = Module(new shadow_stack)
     ss.io.in <> q(0).deq
 
-    val mem_acc_fifo = Module(new Queue((new mem_ac_io),16))
+    //val mem_acc_fifo = VecInit(Seq.fill(2)(Module(new Queue((new mem_ac_io),16)).io))
+    //接上3个asan
+    //val Asan_1 = Module(new Asan_Imp_new(1))
+    //val Asan_2 = Module(new Asan_Imp_new(3))
+    //val Asan_3 = Module(new Asan_Imp_new(5))
+
+    // Asan_1.io.rocc_in <> q_rocc.io.deq
+    // Asan_1.io.din <> q(2).deq
+
+    // Asan_2.io.rocc_in <> q_rocc.io.deq
+    // Asan_2.io.din <> q(4).deq
+
+    outer.roccs(0).module.io.rocc_in.get <> q_rocc.io.deq
+    outer.roccs(0).module.io.din.get <> q(2).deq
+
+    outer.roccs(1).module.io.rocc_in.get <> q_rocc.io.deq
+    outer.roccs(1).module.io.din.get <> q(4).deq
+
+    outer.roccs(2).module.io.rocc_in.get <> q_rocc.io.deq
+    outer.roccs(2).module.io.din.get <> q(5).deq
+
+    outer.roccs(3).module.io.rocc_in.get <> q_rocc.io.deq
+    outer.roccs(3).module.io.din.get <> q(8).deq
+
+
+    // Asan_3.io.rocc_in <> q_rocc.io.deq
+    // Asan_3.io.din <> q(5).deq
     
-    val Asan_1 = Module(new Asan_Imp_new)
-    Asan_1.io.rocc_in <> q_rocc.io.deq
-    Asan_1.io.din <> q(2).deq
-    
-    Asan_1.io.valid_mem   := core.io.valid_mem.get
-    Asan_1.io.data_in     := core.io.asan_data_out.get
-    Asan_1.io.resp_tag    := core.io.resp_tag.get
-    Asan_1.io.chosen      := core.io.arb_chosen.get
-    mem_acc_fifo.io.enq <> Asan_1.io.mem_acc_io
-    core.io.mem_acc_io.get <> mem_acc_fifo.io.deq
+    // Asan_1.io.valid_mem   := core.io.valid_mem.get
+    // Asan_1.io.data_in     := core.io.asan_data_out.get
+    // Asan_1.io.resp_tag    := core.io.resp_tag.get
+
+    // Asan_2.io.valid_mem   := core.io.valid_mem.get
+    // Asan_2.io.data_in     := core.io.asan_data_out.get
+    // Asan_2.io.resp_tag    := core.io.resp_tag.get
+
+    // Asan_3.io.valid_mem   := core.io.valid_mem.get
+    // Asan_3.io.data_in     := core.io.asan_data_out.get
+    // Asan_3.io.resp_tag    := core.io.resp_tag.get
+
+
+    //Asan_1.io.chosen      := core.io.arb_chosen.get
+    // mem_acc_fifo(0).enq <> Asan_1.io.mem_acc_io
+    // core.io.mem_acc_io.get(0) <> mem_acc_fifo(0).deq
+
+    // mem_acc_fifo(1).enq <> Asan_2.io.mem_acc_io
+    // core.io.mem_acc_io.get(1) <> mem_acc_fifo(1).deq
+
+    // mem_acc_fifo(2).enq <> Asan_3.io.mem_acc_io
+    // core.io.mem_acc_io.get(2) <> mem_acc_fifo(2).deq
 
     //core.io.asan_valid.get := Asan_1.io.out_valid
     //core.io.asan_addr.get := Asan_1.io.out_addr
@@ -294,7 +389,7 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     mem_acc_fifo_row.io.enq.bits.addr := rowhammer_1.io.rowham_dmemaddr
     mem_acc_fifo_row.io.enq.bits.cmd := 0.U
     mem_acc_fifo_row.io.enq.bits.size := 0.U
-    mem_acc_fifo_row.io.enq.bits.tag := 64.U
+    mem_acc_fifo_row.io.enq.bits.tag := 3.U
     rowhammer_1.io.valid_mem := core.io.valid_mem.get
     //rowhammer_1.io.resp_tag := core.io.resp_tag.get
     rowhammer_1.io.resp_tag := core.io.resp_tag.get
@@ -303,15 +398,43 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
 
 
     //填上tile1的不要的zzguard的ready口
-    outer.roccs(0).module.io.asan_io.ready := false.B
-    for(i<-0 to 3){
-      outer.roccs(0).module.io.fifo_io(i).ready := false.B
+    // outer.roccs(0).module.io.asan_io.ready := false.B
+    // for(i<-0 to 7){
+    //   outer.roccs(0).module.io.fifo_io(i).ready := false.B
+    // }
+
+    
+    
+
+    
+  }
+  else if(outer.rocketParams.tileId == 2){
+    val q = VecInit(Seq.fill(3)(Module(new Queue(UInt(160.W), 32)).io))
+    val q_rocc = Module(new Queue(UInt(55.W),16))
+
+
+    q_rocc.io.enq.bits  := outer.rocc_bits_in_2.get.bundle
+    q_rocc.io.enq.valid := outer.rocc_valid_in_2.get.bundle
+    outer.rocc_ready_out_2.get.bundle := q_rocc.io.enq.ready
+
+
+    for(i<-0 to 2){
+      q(i).enq.bits := outer.data_bits_in_nodes_2.get(i).bundle
+      q(i).enq.valid := outer.data_valid_in_nodes_2.get(i).bundle
+      outer.data_ready_out_nodes_2.get(i).bundle := q(i).enq.ready
+      dontTouch(q(i).count)
+      dontTouch(q(i).deq)
     }
 
-    
+    for(i <- 0 to 2){
+      outer.roccs(i).module.io.din.get <> q(i).deq
+      outer.roccs(i).module.io.rocc_in.get <> q_rocc.io.deq
+    }
 
 
-    
+
+
+
   }
   //===== zzguardrr: End   ====//
 
@@ -377,16 +500,16 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     (core.io.rocc.csrs zip roccCSRIOs.flatten).foreach { t => t._2 <> t._1 }
 
     //===== zzguardrrlht: Start ====//
-    cmdRouter.get.io.valid := core.io.rocc.valid
-    cmdRouter.get.io.pc := core.io.rocc.pc
-    cmdRouter.get.io.ins := core.io.rocc.ins
-    cmdRouter.get.io.wdata := core.io.rocc.wdata
-    cmdRouter.get.io.mdata := core.io.rocc.mdata
-    core.io.yaofull_counter:= cmdRouter.get.io.yaofull_counter_out
-    core.io.rocc.yaofull_counter_out:= cmdRouter.get.io.yaofull_counter_out
+    // cmdRouter.get.io.valid := core.io.rocc.valid
+    // cmdRouter.get.io.pc := core.io.rocc.pc
+    // cmdRouter.get.io.ins := core.io.rocc.ins
+    // cmdRouter.get.io.wdata := core.io.rocc.wdata
+    // cmdRouter.get.io.mdata := core.io.rocc.mdata
+    // //core.io.yaofull_counter:= cmdRouter.get.io.yaofull_counter_out
+    // //core.io.rocc.yaofull_counter_out:= cmdRouter.get.io.yaofull_counter_out
 
-    cmdRouter.get.io.mem_npc := core.io.rocc.mem_npc
-    cmdRouter.get.io.req_addr := core.io.rocc.req_addr
+    // cmdRouter.get.io.mem_npc := core.io.rocc.mem_npc
+    // cmdRouter.get.io.req_addr := core.io.rocc.req_addr
   //===== zzguardrrlht: end ====//
   } else {
     // tie off

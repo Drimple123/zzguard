@@ -196,14 +196,28 @@ trait CanAttachTile {
       // context.size_mid := domain.element.size_out.get
       // context.valid_mid := domain.element.valid_out.get
       // context.funct_mid := domain.element.funct_out.get
-      for(i<-0 to 3){
+      for(i<-0 to 10){
         context.data_bits_mid(i) := domain.element.data_bits_out_nodes.get(i)
         context.data_valid_mid(i) := domain.element.data_valid_out_nodes.get(i)
         domain.element.data_ready_in_nodes.get(i) := context.data_ready_mid(i)
       }
+
+      for(i<-0 to 2){
+        context.data_bits_mid_2(i) := domain.element.data_bits_out_nodes_2.get(i)
+        context.data_valid_mid_2(i) := domain.element.data_valid_out_nodes_2.get(i)
+        domain.element.data_ready_in_nodes_2.get(i) := context.data_ready_mid_2(i)
+      }
+
       context.rocc_bits_mid := domain.element.rocc_bits_out.get
       context.rocc_valid_mid := domain.element.rocc_valid_out.get
       domain.element.rocc_ready_in.get := context.rocc_ready_mid
+
+      context.rocc_bits_mid_2 := domain.element.rocc_bits_out_2.get
+      context.rocc_valid_mid_2 := domain.element.rocc_valid_out_2.get
+      domain.element.rocc_ready_in_2.get := context.rocc_ready_mid_2
+
+
+
 
       // context.lors_valid_mid := domain.element.lors_valid_out.get
       // context.lors_addr_mid := domain.element.lors_addr_out.get
@@ -215,18 +229,32 @@ trait CanAttachTile {
       // domain.element.size_in.get := context.size_mid
       // domain.element.valid_in.get := context.valid_mid
       // domain.element.funct_in.get := context.funct_mid
-      for(i<-0 to 3){
+      for(i<-0 to 10){
         domain.element.data_bits_in_nodes.get(i) := context.data_bits_mid(i)
         domain.element.data_valid_in_nodes.get(i) := context.data_valid_mid(i)
         context.data_ready_mid(i) := domain.element.data_ready_out_nodes.get(i)
-
       }
+
+
       domain.element.rocc_bits_in.get := context.rocc_bits_mid
       domain.element.rocc_valid_in.get := context.rocc_valid_mid
       context.rocc_ready_mid := domain.element.rocc_ready_out.get
       
       
     }
+
+    else if(domain.element.tileId == 2){
+      for(i<-0 to 2){
+        domain.element.data_bits_in_nodes_2.get(i) := context.data_bits_mid_2(i)
+        domain.element.data_valid_in_nodes_2.get(i) := context.data_valid_mid_2(i)
+        context.data_ready_mid_2(i) := domain.element.data_ready_out_nodes_2.get(i)
+      }
+      
+      domain.element.rocc_bits_in_2.get := context.rocc_bits_mid_2
+      domain.element.rocc_valid_in_2.get := context.rocc_valid_mid_2
+      context.rocc_ready_mid_2 := domain.element.rocc_ready_out_2.get
+    }
+    
   }
   //===== zzguardrr: End   ====//
 

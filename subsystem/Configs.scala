@@ -390,16 +390,88 @@ class WithHypervisor(hext: Boolean = true) extends Config((site, here, up) => {
 })
 
 
+// class WithzzguardRoCC extends Config((site, here, up) => {
+//   case BuildRoCC => List(
+//     (p: Parameters) => {
+//         val tiles = up(TilesLocated(InSubsystem),site)
+//         if(tiles.indexOf(site(TileKey)) == 0){
+//           val zzguard = LazyModule(new zzguardrr_ram_new(OpcodeSet.custom0)(p.alterPartial({case TileKey => "tile0"})))
+//         zzguard
+//         }
+//         else{
+//           None
+//         }
+        
+//     }
+
+//   ) 
+// })
+
 class WithzzguardRoCC extends Config((site, here, up) => {
-  case BuildRoCC => List(
+  case BuildRoCC => {
+    val existingRoCCs = up(BuildRoCC, site)
+    val tiles = up(TilesLocated(InSubsystem), site)
+    site(TileKey) match {
+      case tile: RocketTileParams =>
+        val tileId = tile.tileId
+        println(s"********zzguard: current tile id = $tileId")
 
-    (p: Parameters) => {
-        val zzguard = LazyModule(new zzguardrr_ram_new(OpcodeSet.custom0)(p))
-        zzguard
+        existingRoCCs ++ {
+          if (tileId == 0) {  // 修改这里以符合你的判断条件
+            List((p: Parameters) => {
+              val zzguard = LazyModule(new zzguardrr_ram_new(OpcodeSet.custom0)(p))
+              zzguard
+            })
+          } else if(tileId == 1) {
+            List(
+              (p: Parameters) => {
+              val asan_0 = LazyModule(new asan_rocc(OpcodeSet.custom0)(p))
+              asan_0
+              },
+              (p: Parameters) => {
+              val asan_1 = LazyModule(new asan_rocc(OpcodeSet.custom1)(p))
+              asan_1
+              },
+              (p: Parameters) => {
+              val asan_2 = LazyModule(new asan_rocc(OpcodeSet.custom2)(p))
+              asan_2
+              },
+              (p: Parameters) => {
+              val asan_3 = LazyModule(new asan_rocc(OpcodeSet.custom3)(p))
+              asan_3
+              }
+
+
+            )
+          }
+          else if(tileId == 2) {
+            List(
+              (p: Parameters) => {
+              val asan_0 = LazyModule(new asan_rocc(OpcodeSet.custom0)(p))
+              asan_0
+              },
+              (p: Parameters) => {
+              val asan_1 = LazyModule(new asan_rocc(OpcodeSet.custom1)(p))
+              asan_1
+              },
+              (p: Parameters) => {
+              val asan_2 = LazyModule(new asan_rocc(OpcodeSet.custom2)(p))
+              asan_2
+              }
+
+
+            )
+          }
+          else {
+            List()
+          }
+        }
+      case _ =>
+        existingRoCCs
     }
-
-  ) 
+  }
 })
+
 
 class WithRoccExample extends Config((site, here, up) => {
   case BuildRoCC => List(

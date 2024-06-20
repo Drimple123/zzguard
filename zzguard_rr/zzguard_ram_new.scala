@@ -44,9 +44,14 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   val packet_mid  = Wire(UInt(48.W))
   packet_mid := Cat(cmd.bits.rs1(39,0), cmd.bits.rs2(7,0))
   rocc_packet := Cat(packet_mid, cmd.bits.inst.funct)
-  val q_rocc = Module(new fifox(55, 32, 5))
-  q_rocc.io.in.bits := rocc_packet
-  io.asan_io <> q_rocc.io.out
+  //val q_rocc = Module(new fifox(55, 32, 10))
+  val q_rocc = VecInit(Seq.fill(2)(Module(new fifox(55, 32, 10)).io))
+  for(i <- 0 to 1){
+    q_rocc(i).in.bits := rocc_packet
+    io.asan_io.get(i) <> q_rocc(i).out
+  }
+  
+  
 
 
 
@@ -61,13 +66,13 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   //mask,写表之前为0,写完表置1,程序运行完之后置0
   val cfg_mask = RegInit(0.U)
 
-  valid       := io.valid & cfg_mask
-  din_pc      := io.pc & Fill(40, cfg_mask)
-  din_ins     := io.ins & Fill(32, cfg_mask)
-  din_wdata   := io.wdata & Fill(64, cfg_mask)
-  din_mdata   := io.mdata & Fill(64, cfg_mask)
-  din_npc     := io.mem_npc & Fill(40, cfg_mask)
-  din_req_addr:= io.req_addr & Fill(40, cfg_mask)
+  valid       := io.valid.get & cfg_mask
+  din_pc      := io.pc.get & Fill(40, cfg_mask)
+  din_ins     := io.ins.get & Fill(32, cfg_mask)
+  din_wdata   := io.wdata.get & Fill(64, cfg_mask)
+  din_mdata   := io.mdata.get & Fill(64, cfg_mask)
+  din_npc     := io.mem_npc.get & Fill(40, cfg_mask)
+  din_req_addr:= io.req_addr.get & Fill(40, cfg_mask)
   
   //因为查表控制信号慢了1拍，所以数据也慢1拍
   val ins_r   = RegNext(din_ins,0.U)
@@ -89,40 +94,47 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
 
   when(cmd.fire()){
     when((funct === 6.U)){//传到另一个核的asan
-      q_rocc.io.in.valid := true.B
+      q_rocc(0).in.valid := true.B
+      q_rocc(1).in.valid := true.B
       table.io.wen1 := false.B
       table.io.wen2 := false.B
     }
     .elsewhen(funct === 4.U){//写表完成，开始检测
-      q_rocc.io.in.valid := false.B
+      q_rocc(0).in.valid := false.B
+      q_rocc(1).in.valid := false.B
       cfg_mask := 1.U
       table.io.wen1 := false.B
       table.io.wen2 := false.B
     }
     .elsewhen(funct === 8.U){//主要程序跑完，结束检测
-      q_rocc.io.in.valid := false.B
+      q_rocc(0).in.valid := false.B
+      q_rocc(1).in.valid := false.B
       cfg_mask := 0.U
       table.io.wen1 := false.B
       table.io.wen2 := false.B
     }
     .elsewhen(funct === 1.U){  //写第一张表
-      q_rocc.io.in.valid := false.B
+      q_rocc(0).in.valid := false.B
+      q_rocc(1).in.valid := false.B
       table.io.wen1 := true.B
       table.io.wen2 := false.B
     }
     .elsewhen(funct === 2.U){  //写第二张表
-      q_rocc.io.in.valid := false.B
+      q_rocc(0).in.valid := false.B
+      q_rocc(1).in.valid := false.B
       table.io.wen1 := false.B
       table.io.wen2 := true.B
     }
     .otherwise{
-      q_rocc.io.in.valid := false.B
+      q_rocc(0).in.valid := false.B
+      q_rocc(1).in.valid := false.B
       table.io.wen1 := false.B
       table.io.wen2 := false.B
     }
   }
   .otherwise{
-    q_rocc.io.in.valid := false.B
+    q_rocc(0).in.valid := false.B
+    q_rocc(1).in.valid := false.B
     table.io.wen1 := false.B
     table.io.wen2 := false.B
   }
@@ -146,13 +158,22 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
 
 
   //val q = VecInit(Seq.fill(2)(Module(new asyncfifo(16, 160)).io))
-  val q = VecInit(Seq.fill(4)(Module(new fifox(160, 32, 10)).io))
+  //q0是ss,q1是counter，q2是asan0，q3是rowhammer，q4和q5是asan1和asan2,q6和q7是counter1和2
+  val q = VecInit(Seq.fill(14)(Module(new fifox(160, 32, 10)).io))
+  val q_full_counter = RegInit(VecInit(Seq.fill(11)(0.U(32.W))))
+  dontTouch(q_full_counter)
+  for(i <- 0 to 10){
+    when(q(i).count === 32.U){
+      q_full_counter(i) := q_full_counter(i) + 1.U
+    }
+  }
+
   
   //只要有一个不ready，就把主核stall住
-  io.fifo_ready := q(0).in.ready && q(1).in.ready && q(2).in.ready && q(3).in.ready
-  for(i<- List(0,1,3)){
+  io.fifo_ready.get := q(0).in.ready && q(1).in.ready && q(2).in.ready && q(3).in.ready && q(4).in.ready && q(5).in.ready && q(6).in.ready && q(7).in.ready && q(8).in.ready && q(9).in.ready && q(10).in.ready && q(11).in.ready && q(12).in.ready && q(13).in.ready
+  for(i<- List(0,3)){
     q(i).in.bits := cat.io.out
-    q(i).out.ready := io.fifo_io(i).ready
+    //q(i).out.ready := io.fifo_io(i).ready
     when(valid_r){
       when(bitmap(i) === 1.U){
         q(i).in.valid := true.B
@@ -164,26 +185,120 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
     .otherwise{
       q(i).in.valid := false.B
     }
-    io.fifo_io(i) <> q(i).out
+    io.fifo_io.get(i) <> q(i).out
     dontTouch(q(i).count)
   }
-  //asan要过滤一下
-  q(2).in.bits := cat.io.out
-  q(2).out.ready := io.fifo_io(2).ready
-    when(valid_r){
-      when(bitmap(2) === 1.U){
-        
-          q(2).in.valid := true.B
-      }
-      .otherwise{
-        q(2).in.valid := false.B
+  
+  for(i <- List(1,2,4,5,6,7,8,9,10,11,12,13)){
+    q(i).in.bits := cat.io.out
+  }
+  //q(2).out.ready := io.fifo_io(2).ready
+  // when(valid_r){
+  //   when(bitmap(2) === 1.U){
+  //     when(mdata_r >= "h88000000".U && mdata_r <="h88100000".U){
+  //       q(2).in.valid := true.B
+  //     }
+  //     .otherwise{
+  //       q(2).in.valid := false.B
+  //     }
+  //   }
+  //   .otherwise{
+  //     q(2).in.valid := false.B
+  //   }
+  // }
+  // .otherwise{
+  //   q(2).in.valid := false.B
+  // }
+
+
+  val rr_asan = Module(new fsm_rr_seq(Seq(2,4,5,11,12,13)))
+  // for((i,j) <- List((0,2),(1,4))){
+  //   rr_asan.io.a(i) := q(j).count
+  // }
+  val rr_counter= Module(new fsm_rr_seq(Seq(1,6,7,9)))
+  dontTouch(q(4))
+  dontTouch(q(5))
+  dontTouch(q(6))
+  dontTouch(q(7))
+  dontTouch(q(8))
+  dontTouch(q(9))
+  dontTouch(q(10))
+  // q(1).out.ready := true.B
+  // q(6).out.ready := true.B
+  // q(7).out.ready := true.B
+  //asan的处理
+  when(valid_r){
+    when(bitmap(2) === 1.U){
+        rr_asan.io.en := true.B
+        for(i<- List(2,4,5,8,11,12,13)){
+          when(rr_asan.io.num === i.U){
+            q(i).in.valid := true.B
+          }
+          .otherwise{
+            q(i).in.valid := false.B
+          }
+        }
+    }
+    .otherwise{
+      rr_asan.io.en := false.B
+      q(2).in.valid := false.B
+      q(4).in.valid := false.B
+      q(5).in.valid := false.B
+      q(8).in.valid := false.B
+      q(11).in.valid := false.B
+      q(12).in.valid := false.B
+      q(13).in.valid := false.B
+
+    }
+  }
+  .otherwise{
+    rr_asan.io.en := false.B
+    q(2).in.valid := false.B
+    q(4).in.valid := false.B
+    q(5).in.valid := false.B
+    q(8).in.valid := false.B
+    q(11).in.valid := false.B
+    q(12).in.valid := false.B
+    q(13).in.valid := false.B
+    
+  }
+
+  for(i<- List(1,2,4,5,6,7,8,9,10,11,12,13)){
+    io.fifo_io.get(i) <> q(i).out
+  }
+
+  //搞counter
+  when(valid_r){
+    when(bitmap(1) === 1.U){
+      rr_counter.io.en := true.B
+      for(i<- List(1,6,7,9,10)){
+        when(rr_counter.io.num === i.U){
+          q(i).in.valid := true.B
+        }
+        .otherwise{
+          q(i).in.valid := false.B
+        }
       }
     }
     .otherwise{
-      q(2).in.valid := false.B
+      rr_counter.io.en := false.B
+      q(1).in.valid := false.B
+      q(6).in.valid := false.B
+      q(7).in.valid := false.B
+      q(9).in.valid := false.B
+      q(10).in.valid := false.B
     }
-    io.fifo_io(2) <> q(2).out
-    dontTouch(q(2).count)
+  }
+  .otherwise{
+    rr_counter.io.en := false.B
+    q(1).in.valid := false.B
+    q(6).in.valid := false.B
+    q(7).in.valid := false.B
+    q(9).in.valid := false.B
+    q(10).in.valid := false.B
+    
+  }
+  dontTouch(q(2).count)
 
 }
 

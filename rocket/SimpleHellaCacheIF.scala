@@ -134,5 +134,7 @@ class SimpleHellaCacheIF(implicit p: Parameters) extends Module
   replayq.io.resp := io.cache.resp
   io.requestor.resp := io.cache.resp
 
+
+  //printf(p"S2 request fire: ${s2_req_fire}, Cache exception: ${io.cache.s2_xcpt}\n")
   assert(!s2_req_fire || !io.cache.s2_xcpt.asUInt.orR, "SimpleHellaCacheIF exception")
 }

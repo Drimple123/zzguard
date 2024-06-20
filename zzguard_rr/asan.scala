@@ -11,7 +11,7 @@ class mem_ac_io extends Bundle{
     val size    = UInt(2.W)
 }
 
-class Asan_Imp_new extends Module{
+class Asan_Imp_new(tag: Int) extends Module{
     val io = IO(new Bundle{
         //val in       = Input(UInt(32.W))
         //rocc
@@ -38,7 +38,7 @@ class Asan_Imp_new extends Module{
         val valid_mem   = Input(Bool())
         val data_in     = Input(UInt(8.W))
         val resp_tag    = Input(UInt(8.W))
-        val chosen      = Input(UInt(2.W))
+        //val chosen      = Input(UInt(2.W))
 
         val can_use = Output(Bool())
         val uaf   = Output(Bool())
@@ -56,7 +56,8 @@ class Asan_Imp_new extends Module{
     //val out_valid_w = WireDefault(false.B)
 
     // val ready_r = RegInit(true.B)
-    // val ready_rr= RegInit(true.B)
+    // val ready_rr= RegInit(true.B)val gaga = io.gaga.get
+      //dontTouch(gaga)
     //val ready_w = WireDefault(true.B)
     //rocc来的数据解码
     val in_addr = io.rocc_in.bits(54,15)
@@ -77,7 +78,7 @@ class Asan_Imp_new extends Module{
     addr_fifo.io.enq.bits := lors_addr
     addr_fifo.io.enq.valid := io.din.valid
 
-    addr_fifo.io.deq.ready := io.valid_mem && (io.resp_tag === 0.U)
+    addr_fifo.io.deq.ready := io.valid_mem && (io.resp_tag === tag.U)
 
     
 
@@ -140,7 +141,7 @@ class Asan_Imp_new extends Module{
     io.mem_acc_io.valid := io.din.valid && mask
     io.mem_acc_io.bits.addr := fifo_addr
     io.mem_acc_io.bits.cmd := 0.U
-    io.mem_acc_io.bits.tag := 0.U
+    io.mem_acc_io.bits.tag := tag.U
     io.mem_acc_io.bits.size:= 0.U
 
 

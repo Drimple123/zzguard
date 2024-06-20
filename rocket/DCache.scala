@@ -342,6 +342,8 @@ class DCacheModule(outer: DCache) extends HellaCacheModule(outer) {
     s2_tlb_xcpt := tlb.io.resp
     s2_pma := Mux(s1_tlb_req_valid, pma_checker.io.resp, tlb.io.resp)
   }
+  dontTouch(s1_valid_not_nacked)
+  dontTouch(s2_flush_valid)
   val s2_vaddr = Cat(RegEnable(s1_vaddr, s1_valid_not_nacked || s1_flush_valid) >> tagLSB, s2_req.addr(tagLSB-1, 0))
   val s2_read = isRead(s2_req.cmd)
   val s2_write = isWrite(s2_req.cmd)
@@ -924,6 +926,8 @@ class DCacheModule(outer: DCache) extends HellaCacheModule(outer) {
 
   val s1_xcpt_valid = tlb.io.req.valid && !s1_isSlavePortAccess && !s1_nack
   io.cpu.s2_xcpt := Mux(RegNext(s1_xcpt_valid), s2_tlb_xcpt, 0.U.asTypeOf(s2_tlb_xcpt))
+  dontTouch(s2_tlb_xcpt)
+  dontTouch(s1_xcpt_valid)
 
   if (usingDataScratchpad) {
     assert(!(s2_valid_masked && s2_req.cmd.isOneOf(M_XLR, M_XSC)))
