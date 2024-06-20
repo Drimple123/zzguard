@@ -443,7 +443,26 @@ class WithzzguardRoCC extends Config((site, here, up) => {
 
 
             )
-          }else {
+          }
+          else if(tileId == 2) {
+            List(
+              (p: Parameters) => {
+              val asan_0 = LazyModule(new asan_rocc(OpcodeSet.custom0)(p))
+              asan_0
+              },
+              (p: Parameters) => {
+              val asan_1 = LazyModule(new asan_rocc(OpcodeSet.custom1)(p))
+              asan_1
+              },
+              (p: Parameters) => {
+              val asan_2 = LazyModule(new asan_rocc(OpcodeSet.custom2)(p))
+              asan_2
+              }
+
+
+            )
+          }
+          else {
             List()
           }
         }

@@ -82,8 +82,8 @@ class RoCCIO(val nPTWPorts: Int, nRoCCCSRs: Int)(implicit p: Parameters) extends
   //asan_rocc
   //val gaga = if(tileParams.tileId == 1) Some(Input(UInt(40.W))) else None
 
-  val din = if(tileParams.tileId == 1) Some(Flipped(Decoupled(UInt(160.W)))) else None
-  val rocc_in = if(tileParams.tileId == 1) Some(Flipped(Decoupled(UInt(55.W)))) else None
+  val din = if(tileParams.tileId == 1 || tileParams.tileId == 2) Some(Flipped(Decoupled(UInt(160.W)))) else None
+  val rocc_in = if(tileParams.tileId == 1 || tileParams.tileId == 2) Some(Flipped(Decoupled(UInt(55.W)))) else None
 
   //zzguard
   val valid = if(tileParams.tileId == 0) Some(Input(Bool())) else None
@@ -94,9 +94,10 @@ class RoCCIO(val nPTWPorts: Int, nRoCCCSRs: Int)(implicit p: Parameters) extends
   val mem_npc = if(tileParams.tileId == 0) Some(Input(UInt(40.W))) else None
   val req_addr = if(tileParams.tileId == 0) Some(Input(UInt(40.W))) else None
 
-  val asan_io = if(tileParams.tileId == 0) Some(Decoupled(UInt(55.W))) else None
+  val asan_io = if(tileParams.tileId == 0) Some(Vec(2,Decoupled(UInt(55.W)))) else None
+
   val fifo_ready = if(tileParams.tileId == 0) Some(Output(Bool())) else None
-  val fifo_io = if(tileParams.tileId == 0) Some(Vec(11, Decoupled(UInt(160.W)))) else None
+  val fifo_io = if(tileParams.tileId == 0) Some(Vec(14, Decoupled(UInt(160.W)))) else None
 
 
 

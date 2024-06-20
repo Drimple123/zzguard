@@ -50,8 +50,11 @@ class asan_rocc_Imp(outer: asan_rocc)(implicit p: Parameters) extends LazyRoCCMo
     val dmem_resp = io.mem.resp
 
     val ready_r = RegInit(true.B)
-    val addr = RegNext(fifo_addr)
+
+    //val addr = RegNext(fifo_addr)
+    val addr = RegInit(0.U(40.W))
     when(io.din.get.fire && mask){
+      addr := fifo_addr
       addr_fifo_r := lors_addr
       ready_r := false.B
     }

@@ -189,10 +189,26 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
       outer.roccs(0).module.io.fifo_io.get(i).ready := outer.data_ready_in_nodes.get(i).bundle
 
     }
+
+    for((i,j) <- List((11,0),(12,1),(13,2))){
+      outer.data_bits_out_nodes_2.get(j).bundle:= outer.roccs(0).module.io.fifo_io.get(i).bits
+      outer.data_valid_out_nodes_2.get(j).bundle:= outer.roccs(0).module.io.fifo_io.get(i).valid
+      outer.roccs(0).module.io.fifo_io.get(i).ready := outer.data_ready_in_nodes_2.get(j).bundle
+
+    }
+
+    
+
+    
+
     core.io.ready_stall.get := outer.roccs(0).module.io.fifo_ready.get
-    outer.rocc_bits_out.get.bundle := outer.roccs(0).module.io.asan_io.get.bits
-    outer.rocc_valid_out.get.bundle := outer.roccs(0).module.io.asan_io.get.valid
-    outer.roccs(0).module.io.asan_io.get.ready := outer.rocc_ready_in.get.bundle
+    outer.rocc_bits_out.get.bundle := outer.roccs(0).module.io.asan_io.get(0).bits
+    outer.rocc_valid_out.get.bundle := outer.roccs(0).module.io.asan_io.get(0).valid
+    outer.roccs(0).module.io.asan_io.get(0).ready := outer.rocc_ready_in.get.bundle
+
+    outer.rocc_bits_out_2.get.bundle := outer.roccs(0).module.io.asan_io.get(1).bits
+    outer.rocc_valid_out_2.get.bundle := outer.roccs(0).module.io.asan_io.get(1).valid
+    outer.roccs(0).module.io.asan_io.get(1).ready := outer.rocc_ready_in_2.get.bundle
 
     //新的直接从core里面拉到zzguard的一条路
     outer.roccs(0).module.io.valid.get := core.io.valid.get
@@ -391,6 +407,34 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     
 
     
+  }
+  else if(outer.rocketParams.tileId == 2){
+    val q = VecInit(Seq.fill(3)(Module(new Queue(UInt(160.W), 32)).io))
+    val q_rocc = Module(new Queue(UInt(55.W),16))
+
+
+    q_rocc.io.enq.bits  := outer.rocc_bits_in_2.get.bundle
+    q_rocc.io.enq.valid := outer.rocc_valid_in_2.get.bundle
+    outer.rocc_ready_out_2.get.bundle := q_rocc.io.enq.ready
+
+
+    for(i<-0 to 2){
+      q(i).enq.bits := outer.data_bits_in_nodes_2.get(i).bundle
+      q(i).enq.valid := outer.data_valid_in_nodes_2.get(i).bundle
+      outer.data_ready_out_nodes_2.get(i).bundle := q(i).enq.ready
+      dontTouch(q(i).count)
+      dontTouch(q(i).deq)
+    }
+
+    for(i <- 0 to 2){
+      outer.roccs(i).module.io.din.get <> q(i).deq
+      outer.roccs(i).module.io.rocc_in.get <> q_rocc.io.deq
+    }
+
+
+
+
+
   }
   //===== zzguardrr: End   ====//
 
