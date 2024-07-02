@@ -199,6 +199,10 @@ trait DefaultHierarchicalElementContextType
   val rocc_valid_mid_3 = BundleBridgeIdentityNode[Bool]()
   val rocc_bits_mid_3 = BundleBridgeIdentityNode[UInt]()
   val rocc_ready_mid_3 = BundleBridgeIdentityNode[Bool]()
+
+
+  //传tile1的fifo的count的中间节点
+  val count_mid_1 = Seq.fill(3)(BundleBridgeIdentityNode[UInt]())
   //===== zzguardrr: End   ====//
 }
 

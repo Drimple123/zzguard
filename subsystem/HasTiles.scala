@@ -226,8 +226,10 @@ trait CanAttachTile {
       context.rocc_valid_mid_3 := domain.element.rocc_valid_out_3.get
       domain.element.rocc_ready_in_3.get := context.rocc_ready_mid_3
 
-
-
+      //fifo的count
+      for(i<-0 to 2){
+        domain.element.count_in_nodes_1.get(i) := context.count_mid_1(i)
+      }
 
 
 
@@ -252,7 +254,11 @@ trait CanAttachTile {
       domain.element.rocc_valid_in.get := context.rocc_valid_mid
       context.rocc_ready_mid := domain.element.rocc_ready_out.get
       
-      
+      //fifo的count
+      for(i<-0 to 2){
+        context.count_mid_1(i) := domain.element.count_out_nodes_1.get(i)
+      }
+
     }
 
     else if(domain.element.tileId == 2){

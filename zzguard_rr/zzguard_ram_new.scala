@@ -218,7 +218,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   // }
 
 
-  val rr_asan = Module(new fsm_rr_seq(Seq(2,4,5,11,12,13,14,15,16)))
+  val rr_asan = Module(new fsm_rr_seq(Seq(2,4)))
   // for((i,j) <- List((0,2),(1,4))){
   //   rr_asan.io.a(i) := q(j).count
   // }
@@ -313,5 +313,19 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   }
   dontTouch(q(2).count)
 
+
+  //看前满后满
+  val qmhm_counter = RegInit(VecInit(Seq.fill(3)(0.U(15.W))))
+  val qmhbm_counter = RegInit(VecInit(Seq.fill(3)(0.U(15.W))))
+  dontTouch(qmhm_counter)
+  dontTouch(qmhbm_counter)
+  for((i,j) <- List((2,0), (4,1), (5,2))){
+    when(q(i).count === 32.U && io.count_io.get(j) === 32.U){
+      qmhm_counter(j) := qmhm_counter(j) + 1.U
+    }
+    when(q(i).count === 32.U && io.count_io.get(j) =/= 32.U){
+      qmhm_counter(j) := qmhm_counter(j) + 1.U
+    }
+  }
 }
 

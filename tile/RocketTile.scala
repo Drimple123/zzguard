@@ -231,7 +231,9 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     outer.roccs(0).module.io.req_addr.get := core.io.req_addr.get
     
 
-
+    for(i <- 0 to 2){
+      outer.roccs(0).module.io.count_io.get(i) := outer.count_in_nodes_1.get(i).bundle
+    }
 
     //asan的小filter，如果ins是load or store ， valid 拉高
     // val asan_filter_1 = Module(new asan_filter)
@@ -291,7 +293,16 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     // }
 
     val q = VecInit(Seq.fill(11)(Module(new Queue(UInt(160.W), 32)).io))
+    
+
+    for(i <- 0 to 2){
+      outer.count_out_nodes_1.get(i).bundle := q(i).count
+    }
+
+
+
     val q_full_counter = RegInit(VecInit(Seq.fill(11)(0.U(32.W))))
+    
     dontTouch(q_full_counter)
     for(i <- 0 to 10){
       when(q(i).count === 32.U){

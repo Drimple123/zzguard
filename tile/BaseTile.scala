@@ -328,17 +328,19 @@ abstract class BaseTile private (crossing: ClockCrossingType, q: Parameters)
 
 
 
-  // //fifo的count,tile1传的节点                                                        
-  // val count_out_nodes_1: Option[Seq[BundleBridgeSource[UInt]]] = if(tileParams.tileId == 1)
-  //                                                         Some(Seq.fill(3)(BundleBridgeSource[UInt](Some(() => UInt(7.W)))))
-  //                                                       else
-  //                                                         None
+  //fifo的count,tile1传的节点                                                        
+  val count_out_nodes_1: Option[Seq[BundleBridgeSource[UInt]]] = if(tileParams.tileId == 1)
+                                                          Some(Seq.fill(3)(BundleBridgeSource[UInt](Some(() => UInt(7.W)))))
+                                                        else
+                                                          None
 
-  // //fifo的count ,tile0接收的节点
-  // val count_in_nodes_1: Option[Seq[BundleBridgeSink[UInt]]] = if(tileParams.tileId == 0)
-  //                                                         Some(Seq.fill(3)(BundleBridgeSink[UInt](Some(() => UInt(7.W)))))
-  //                                                       else
-  //                                                         None
+  //fifo的count ,tile0接收的节点
+  val count_in_nodes_1: Option[Seq[BundleBridgeSink[UInt]]] = if(tileParams.tileId == 0)
+                                                          Some(Seq.fill(3)(BundleBridgeSink[UInt](Some(() => UInt(7.W)))))
+                                                        else
+                                                          None
+
+
   // val data_valid_nodes: Option[Seq[BundleBridgeSource[UInt]]] = if(tileParams.tileId == 0)
   //                                                         Some(Seq.fill(4)(BundleBridgeSource[UInt](Some(() => UInt(160.W)))))
   //                                                       else
