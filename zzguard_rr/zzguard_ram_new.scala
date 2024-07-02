@@ -45,8 +45,8 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   packet_mid := Cat(cmd.bits.rs1(39,0), cmd.bits.rs2(7,0))
   rocc_packet := Cat(packet_mid, cmd.bits.inst.funct)
   //val q_rocc = Module(new fifox(55, 32, 10))
-  val q_rocc = VecInit(Seq.fill(2)(Module(new fifox(55, 32, 10)).io))
-  for(i <- 0 to 1){
+  val q_rocc = VecInit(Seq.fill(3)(Module(new fifox(55, 32, 10)).io))
+  for(i <- 0 to 2){
     q_rocc(i).in.bits := rocc_packet
     io.asan_io.get(i) <> q_rocc(i).out
   }
@@ -96,12 +96,14 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
     when((funct === 6.U)){//传到另一个核的asan
       q_rocc(0).in.valid := true.B
       q_rocc(1).in.valid := true.B
+      q_rocc(2).in.valid := true.B
       table.io.wen1 := false.B
       table.io.wen2 := false.B
     }
     .elsewhen(funct === 4.U){//写表完成，开始检测
       q_rocc(0).in.valid := false.B
       q_rocc(1).in.valid := false.B
+      q_rocc(2).in.valid := false.B
       cfg_mask := 1.U
       table.io.wen1 := false.B
       table.io.wen2 := false.B
@@ -109,6 +111,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
     .elsewhen(funct === 8.U){//主要程序跑完，结束检测
       q_rocc(0).in.valid := false.B
       q_rocc(1).in.valid := false.B
+      q_rocc(2).in.valid := false.B
       cfg_mask := 0.U
       table.io.wen1 := false.B
       table.io.wen2 := false.B
@@ -116,18 +119,21 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
     .elsewhen(funct === 1.U){  //写第一张表
       q_rocc(0).in.valid := false.B
       q_rocc(1).in.valid := false.B
+      q_rocc(2).in.valid := false.B
       table.io.wen1 := true.B
       table.io.wen2 := false.B
     }
     .elsewhen(funct === 2.U){  //写第二张表
       q_rocc(0).in.valid := false.B
       q_rocc(1).in.valid := false.B
+      q_rocc(2).in.valid := false.B
       table.io.wen1 := false.B
       table.io.wen2 := true.B
     }
     .otherwise{
       q_rocc(0).in.valid := false.B
       q_rocc(1).in.valid := false.B
+      q_rocc(2).in.valid := false.B
       table.io.wen1 := false.B
       table.io.wen2 := false.B
     }
@@ -135,6 +141,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   .otherwise{
     q_rocc(0).in.valid := false.B
     q_rocc(1).in.valid := false.B
+    q_rocc(2).in.valid := false.B
     table.io.wen1 := false.B
     table.io.wen2 := false.B
   }
@@ -159,7 +166,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
 
   //val q = VecInit(Seq.fill(2)(Module(new asyncfifo(16, 160)).io))
   //q0是ss,q1是counter，q2是asan0，q3是rowhammer，q4和q5是asan1和asan2,q6和q7是counter1和2
-  val q = VecInit(Seq.fill(14)(Module(new fifox(160, 32, 10)).io))
+  val q = VecInit(Seq.fill(17)(Module(new fifox(160, 32, 10)).io))
   val q_full_counter = RegInit(VecInit(Seq.fill(11)(0.U(32.W))))
   dontTouch(q_full_counter)
   for(i <- 0 to 10){
@@ -170,7 +177,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
 
   
   //只要有一个不ready，就把主核stall住
-  io.fifo_ready.get := q(0).in.ready && q(1).in.ready && q(2).in.ready && q(3).in.ready && q(4).in.ready && q(5).in.ready && q(6).in.ready && q(7).in.ready && q(8).in.ready && q(9).in.ready && q(10).in.ready && q(11).in.ready && q(12).in.ready && q(13).in.ready
+  io.fifo_ready.get := q(0).in.ready && q(1).in.ready && q(2).in.ready && q(3).in.ready && q(4).in.ready && q(5).in.ready && q(6).in.ready && q(7).in.ready && q(8).in.ready && q(9).in.ready && q(10).in.ready && q(11).in.ready && q(12).in.ready && q(13).in.ready && q(14).in.ready && q(15).in.ready && q(16).in.ready
   for(i<- List(0,3)){
     q(i).in.bits := cat.io.out
     //q(i).out.ready := io.fifo_io(i).ready
@@ -189,7 +196,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
     dontTouch(q(i).count)
   }
   
-  for(i <- List(1,2,4,5,6,7,8,9,10,11,12,13)){
+  for(i <- List(1,2,4,5,6,7,8,9,10,11,12,13,14,15,16)){
     q(i).in.bits := cat.io.out
   }
   //q(2).out.ready := io.fifo_io(2).ready
@@ -211,7 +218,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   // }
 
 
-  val rr_asan = Module(new fsm_rr_seq(Seq(2,4,5,11,12,13)))
+  val rr_asan = Module(new fsm_rr_seq(Seq(2,4,5,11,12,13,14,15,16)))
   // for((i,j) <- List((0,2),(1,4))){
   //   rr_asan.io.a(i) := q(j).count
   // }
@@ -230,7 +237,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   when(valid_r){
     when(bitmap(2) === 1.U){
         rr_asan.io.en := true.B
-        for(i<- List(2,4,5,8,11,12,13)){
+        for(i<- List(2,4,5,8,11,12,13,14,15,16)){
           when(rr_asan.io.num === i.U){
             q(i).in.valid := true.B
           }
@@ -248,6 +255,9 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
       q(11).in.valid := false.B
       q(12).in.valid := false.B
       q(13).in.valid := false.B
+      q(14).in.valid := false.B
+      q(15).in.valid := false.B
+      q(16).in.valid := false.B
 
     }
   }
@@ -260,10 +270,13 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
     q(11).in.valid := false.B
     q(12).in.valid := false.B
     q(13).in.valid := false.B
+    q(14).in.valid := false.B
+    q(15).in.valid := false.B
+    q(16).in.valid := false.B
     
   }
 
-  for(i<- List(1,2,4,5,6,7,8,9,10,11,12,13)){
+  for(i<- List(1,2,4,5,6,7,8,9,10,11,12,13,14,15,16)){
     io.fifo_io.get(i) <> q(i).out
   }
 

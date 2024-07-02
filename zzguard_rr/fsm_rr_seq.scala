@@ -6,10 +6,10 @@ import chisel3.util._
 class fsm_rr_seq(val numbers: Seq[Int]) extends Module {
     val io = IO(new Bundle {
         val en    = Input(Bool())
-        val num   = Output(UInt(4.W))
+        val num   = Output(UInt(5.W))
     })
 
-    val state = RegInit(0.U(4.W))
+    val state = RegInit(0.U(5.W))
     val numVec = VecInit(numbers.map(_.U))
     when(io.en){
         when(state === (numbers.length -1).U){
