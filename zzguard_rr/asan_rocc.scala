@@ -118,6 +118,13 @@ class asan_rocc_Imp(outer: asan_rocc)(implicit p: Parameters) extends LazyRoCCMo
     dontTouch(uaf_r)
     dontTouch(overflow_r)
 
+    val mic = Module(new miss_counter)
+    mic.io.a := dmem_req.fire
+    mic.io.b := dmem_resp.valid
+    
+
+
+
     // when(io.valid_mem && (io.resp_tag === 0.U)){
     //     ready_r := true.B
     //     ready_rr := true.B

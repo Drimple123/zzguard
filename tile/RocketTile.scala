@@ -208,7 +208,7 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
 
     
 
-    core.io.ready_stall.get := outer.roccs(0).module.io.fifo_ready.get
+    core.io.ready_stall.get := outer.roccs(0).module.io.fifo_full.get
     outer.rocc_bits_out.get.bundle := outer.roccs(0).module.io.asan_io.get(0).bits
     outer.rocc_valid_out.get.bundle := outer.roccs(0).module.io.asan_io.get(0).valid
     outer.roccs(0).module.io.asan_io.get(0).ready := outer.rocc_ready_in.get.bundle

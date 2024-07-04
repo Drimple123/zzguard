@@ -940,7 +940,7 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
     id_do_fence ||
     csr.io.csr_stall ||
     id_reg_pause ||
-    io.traceStall || (~io.ready_stall.get)
+    io.traceStall || (io.ready_stall.get)
   }
   else{
      ctrl_stalld :=

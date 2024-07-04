@@ -175,9 +175,24 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
     }
   }
 
-  
+  //val yao_full = VecInit(Seq.fill(17)(Wire(Bool())))
+  val yao_full = WireDefault(VecInit(Seq.fill(17)(false.B)))
+  for(i <- 0 until 17){
+    when(q(i).count >= 28.U){
+      yao_full(i) := true.B
+    }
+    .otherwise{
+      yao_full(i) := false.B
+    }
+  }
+  val yao_full_01234 = yao_full(0) || yao_full(1) || yao_full(2) || yao_full(3) || yao_full(4)
+  val yao_full_5678 = yao_full(5) || yao_full(6) || yao_full(7) || yao_full(8)
+  val yao_full_9_12 = yao_full(9) || yao_full(10) || yao_full(11) || yao_full(12)
+  val yao_full_13_16 = yao_full(13) || yao_full(14) || yao_full(15) || yao_full(16)
+  io.fifo_full.get := yao_full_01234 || yao_full_5678 || yao_full_9_12 || yao_full_13_16
   //只要有一个不ready，就把主核stall住
-  io.fifo_ready.get := q(0).in.ready && q(1).in.ready && q(2).in.ready && q(3).in.ready && q(4).in.ready && q(5).in.ready && q(6).in.ready && q(7).in.ready && q(8).in.ready && q(9).in.ready && q(10).in.ready && q(11).in.ready && q(12).in.ready && q(13).in.ready && q(14).in.ready && q(15).in.ready && q(16).in.ready
+  //io.fifo_ready.get := q(0).in.ready && q(1).in.ready && q(2).in.ready && q(3).in.ready && q(4).in.ready && q(5).in.ready && q(6).in.ready && q(7).in.ready && q(8).in.ready && q(9).in.ready && q(10).in.ready && q(11).in.ready && q(12).in.ready && q(13).in.ready && q(14).in.ready && q(15).in.ready && q(16).in.ready
+
   for(i<- List(0,3)){
     q(i).in.bits := cat.io.out
     //q(i).out.ready := io.fifo_io(i).ready
@@ -218,7 +233,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   // }
 
 
-  val rr_asan = Module(new fsm_rr_seq(Seq(2,4)))
+  val rr_asan = Module(new fsm_rr_seq(Seq(2,4,5,11)))
   // for((i,j) <- List((0,2),(1,4))){
   //   rr_asan.io.a(i) := q(j).count
   // }
