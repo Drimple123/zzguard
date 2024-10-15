@@ -218,7 +218,8 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   // }
 
 
-  val rr_asan = Module(new fsm_rr_seq(Seq(2,4,5,11,12,13,14,15,16)))
+  //val rr_asan = Module(new fsm_rr_seq(Seq(2,4,5,11,12,13,14,15,16)))
+  val rr_asan = Module(new fsm_rr_seq(Seq(2,4,5,8)))
   // for((i,j) <- List((0,2),(1,4))){
   //   rr_asan.io.a(i) := q(j).count
   // }
@@ -236,6 +237,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   //asan的处理
   when(valid_r){
     when(bitmap(2) === 1.U){
+      when((mdata_r >= "h80004470".U) && (mdata_r <= "h80025000".U)){
         rr_asan.io.en := true.B
         for(i<- List(2,4,5,8,11,12,13,14,15,16)){
           when(rr_asan.io.num === i.U){
@@ -245,6 +247,20 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
             q(i).in.valid := false.B
           }
         }
+      }
+      .otherwise{
+        rr_asan.io.en := false.B
+        q(2).in.valid := false.B
+        q(4).in.valid := false.B
+        q(5).in.valid := false.B
+        q(8).in.valid := false.B
+        q(11).in.valid := false.B
+        q(12).in.valid := false.B
+        q(13).in.valid := false.B
+        q(14).in.valid := false.B
+        q(15).in.valid := false.B
+        q(16).in.valid := false.B
+      }
     }
     .otherwise{
       rr_asan.io.en := false.B

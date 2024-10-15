@@ -349,18 +349,23 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     // Asan_2.io.rocc_in <> q_rocc.io.deq
     // Asan_2.io.din <> q(4).deq
 
-    outer.roccs(0).module.io.rocc_in.get <> q_rocc.io.deq
-    outer.roccs(0).module.io.din.get <> q(2).deq
+    // outer.roccs(0).module.io.rocc_in.get <> q_rocc.io.deq
+    // outer.roccs(0).module.io.din.get <> q(2).deq
 
-    outer.roccs(1).module.io.rocc_in.get <> q_rocc.io.deq
-    outer.roccs(1).module.io.din.get <> q(4).deq
+    // outer.roccs(1).module.io.rocc_in.get <> q_rocc.io.deq
+    // outer.roccs(1).module.io.din.get <> q(4).deq
 
-    outer.roccs(2).module.io.rocc_in.get <> q_rocc.io.deq
-    outer.roccs(2).module.io.din.get <> q(5).deq
+    // outer.roccs(2).module.io.rocc_in.get <> q_rocc.io.deq
+    // outer.roccs(2).module.io.din.get <> q(5).deq
 
-    outer.roccs(3).module.io.rocc_in.get <> q_rocc.io.deq
-    outer.roccs(3).module.io.din.get <> q(8).deq
+    // outer.roccs(3).module.io.rocc_in.get <> q_rocc.io.deq
+    // outer.roccs(3).module.io.din.get <> q(8).deq
 
+    val asan_srams = VecInit(Seq.fill(4)(Module(new asan_sram).io))
+    for((i,j) <- Seq((0,2),(1,4),(2,5),(3,8))){
+      asan_srams(i).din <> q(j).deq
+      asan_srams(i).rocc_in <> q_rocc.io.deq
+    }
 
     // Asan_3.io.rocc_in <> q_rocc.io.deq
     // Asan_3.io.din <> q(5).deq

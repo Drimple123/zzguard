@@ -422,28 +422,7 @@ class WithzzguardRoCC extends Config((site, here, up) => {
               val zzguard = LazyModule(new zzguardrr_ram_new(OpcodeSet.custom0)(p))
               zzguard
             })
-          } else if(tileId == 1) {
-            List(
-              (p: Parameters) => {
-              val asan_0 = LazyModule(new asan_rocc(OpcodeSet.custom0)(p))
-              asan_0
-              },
-              (p: Parameters) => {
-              val asan_1 = LazyModule(new asan_rocc(OpcodeSet.custom1)(p))
-              asan_1
-              },
-              (p: Parameters) => {
-              val asan_2 = LazyModule(new asan_rocc(OpcodeSet.custom2)(p))
-              asan_2
-              },
-              (p: Parameters) => {
-              val asan_3 = LazyModule(new asan_rocc(OpcodeSet.custom3)(p))
-              asan_3
-              }
-
-
-            )
-          }
+          } 
           else if(tileId == 2) {
             List(
               (p: Parameters) => {
