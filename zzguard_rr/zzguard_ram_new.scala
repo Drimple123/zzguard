@@ -219,7 +219,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
 
 
   //val rr_asan = Module(new fsm_rr_seq(Seq(2,4,5,11,12,13,14,15,16)))
-  val rr_asan = Module(new fsm_rr_seq(Seq(2,4,5,8)))
+  //val rr_asan = Module(new fsm_rr_seq(Seq(2,4,5,8)))
   // for((i,j) <- List((0,2),(1,4))){
   //   rr_asan.io.a(i) := q(j).count
   // }
@@ -231,66 +231,87 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   dontTouch(q(8))
   dontTouch(q(9))
   dontTouch(q(10))
+
+  val rr_arb = Module(new zz_RRarbiter(4))
+  val readys = Cat(q(2).in.ready,q(4).in.ready,q(5).in.ready,q(8).in.ready)
+  //canshuhua how to write?
+  //valid + table + address filter
+  val asan_en = valid_r && (bitmap(2) === 1.U) && ((mdata_r >= "h80004470".U) && (mdata_r <= "h80025000".U))
+  rr_arb.io.req := readys & Fill(4,asan_en)
+  // for((i,j) <- Seq((0,2),(1,4),(2,5),(3,8))){
+  //   q(j).in.valid := rr_arb.io.gnt(i).asBool
+  // }
+  q(2).in.valid := rr_arb.io.gnt(0).asBool
+  q(4).in.valid := rr_arb.io.gnt(1).asBool
+  q(5).in.valid := rr_arb.io.gnt(2).asBool
+  q(8).in.valid := rr_arb.io.gnt(3).asBool
+
+  for(i <- 11 to 16){
+    q(i).in.valid := false.B
+  }
+
+
   // q(1).out.ready := true.B
   // q(6).out.ready := true.B
   // q(7).out.ready := true.B
   //asan的处理
-  when(valid_r){
-    when(bitmap(2) === 1.U){
-      when((mdata_r >= "h80004470".U) && (mdata_r <= "h80025000".U)){
-        rr_asan.io.en := true.B
-        for(i<- List(2,4,5,8,11,12,13,14,15,16)){
-          when(rr_asan.io.num === i.U){
-            q(i).in.valid := true.B
-          }
-          .otherwise{
-            q(i).in.valid := false.B
-          }
-        }
-      }
-      .otherwise{
-        rr_asan.io.en := false.B
-        q(2).in.valid := false.B
-        q(4).in.valid := false.B
-        q(5).in.valid := false.B
-        q(8).in.valid := false.B
-        q(11).in.valid := false.B
-        q(12).in.valid := false.B
-        q(13).in.valid := false.B
-        q(14).in.valid := false.B
-        q(15).in.valid := false.B
-        q(16).in.valid := false.B
-      }
-    }
-    .otherwise{
-      rr_asan.io.en := false.B
-      q(2).in.valid := false.B
-      q(4).in.valid := false.B
-      q(5).in.valid := false.B
-      q(8).in.valid := false.B
-      q(11).in.valid := false.B
-      q(12).in.valid := false.B
-      q(13).in.valid := false.B
-      q(14).in.valid := false.B
-      q(15).in.valid := false.B
-      q(16).in.valid := false.B
+  // when(valid_r){
+  //   when(bitmap(2) === 1.U){
+  //     when((mdata_r >= "h80004470".U) && (mdata_r <= "h80025000".U)){
+  //       rr_asan.io.en := true.B
+  //       for(i<- List(2,4,5,8,11,12,13,14,15,16)){
+  //         when(rr_asan.io.num === i.U){
+  //           q(i).in.valid := true.B
+  //         }
+  //         .otherwise{
+  //           q(i).in.valid := false.B
+  //         }
+  //       }
+  //     }
+  //     .otherwise{
+  //       rr_asan.io.en := false.B
+  //       q(2).in.valid := false.B
+  //       q(4).in.valid := false.B
+  //       q(5).in.valid := false.B
+  //       q(8).in.valid := false.B
+  //       q(11).in.valid := false.B
+  //       q(12).in.valid := false.B
+  //       q(13).in.valid := false.B
+  //       q(14).in.valid := false.B
+  //       q(15).in.valid := false.B
+  //       q(16).in.valid := false.B
+  //     }
+  //   }
+  //   .otherwise{
+  //     rr_asan.io.en := false.B
+  //     q(2).in.valid := false.B
+  //     q(4).in.valid := false.B
+  //     q(5).in.valid := false.B
+  //     q(8).in.valid := false.B
+  //     q(11).in.valid := false.B
+  //     q(12).in.valid := false.B
+  //     q(13).in.valid := false.B
+  //     q(14).in.valid := false.B
+  //     q(15).in.valid := false.B
+  //     q(16).in.valid := false.B
 
-    }
-  }
-  .otherwise{
-    rr_asan.io.en := false.B
-    q(2).in.valid := false.B
-    q(4).in.valid := false.B
-    q(5).in.valid := false.B
-    q(8).in.valid := false.B
-    q(11).in.valid := false.B
-    q(12).in.valid := false.B
-    q(13).in.valid := false.B
-    q(14).in.valid := false.B
-    q(15).in.valid := false.B
-    q(16).in.valid := false.B
+  //   }
+  // }
+  // .otherwise{
+  //   rr_asan.io.en := false.B
+  //   q(2).in.valid := false.B
+  //   q(4).in.valid := false.B
+  //   q(5).in.valid := false.B
+  //   q(8).in.valid := false.B
+  //   q(11).in.valid := false.B
+  //   q(12).in.valid := false.B
+  //   q(13).in.valid := false.B
+  //   q(14).in.valid := false.B
+  //   q(15).in.valid := false.B
+  //   q(16).in.valid := false.B
     
-  }
+  // }
+
 
   for(i<- List(1,2,4,5,6,7,8,9,10,11,12,13,14,15,16)){
     io.fifo_io.get(i) <> q(i).out
