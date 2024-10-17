@@ -83,6 +83,26 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   val req_addr_r= RegNext(din_req_addr, 0.U)
 
   val table = Module(new look_2table_ram(4))
+
+  val j_nen = RegInit(true.B)
+  val ret_en = RegInit(false.B)
+  val valid_ss = valid_r && j_nen
+
+  //shadow stack bypass
+  when(din_ins(11,0) === "h6f".U){//j
+    j_nen := false.B
+    ret_en := false.B
+  }
+  .elsewhen(din_ins(11,0) === "h67".U){
+    ret_en := true.B
+    j_nen := true.B
+  }
+  .otherwise{
+    j_nen := true.B
+    ret_en := false.B
+  }
+
+
   table.io.ren1 := valid
   table.io.ren2 := valid_r
 
@@ -153,6 +173,8 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   bitmap := table.io.bitmap
 
   val cat = Module(new instruction_cat1)
+  
+
   //cat.io.in_1  := io.din_pc
   cat.io.ins    := ins_r
   cat.io.wdata  := wdata_r
@@ -162,6 +184,22 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
 
   cat.io.sel    := table.io.sel
   
+  val cat2 = Module(new instruction_cat2)
+  cat2.io.wdata := wdata_r
+  cat2.io.mdata := mdata_r
+  cat2.io.npc := npc_r
+  cat2.io.req_addr := req_addr_r
+  cat2.io.sel := table.io.sel
+
+  //if ret, mark qian 4 bit of data
+  val data_ss = Wire(UInt(64.W))
+  when(ret_en){
+    data_ss := cat2.io.out | "hf000_0000_0000_0000".U
+  }
+  .otherwise{
+    data_ss := cat2.io.out
+  }
+
 
 
   //val q = VecInit(Seq.fill(2)(Module(new asyncfifo(16, 160)).io))
@@ -179,9 +217,9 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   //只要有一个不ready，就把主核stall住
   io.fifo_ready.get := q(0).in.ready && q(1).in.ready && q(2).in.ready && q(3).in.ready && q(4).in.ready && q(5).in.ready && q(6).in.ready && q(7).in.ready && q(8).in.ready && q(9).in.ready && q(10).in.ready && q(11).in.ready && q(12).in.ready && q(13).in.ready && q(14).in.ready && q(15).in.ready && q(16).in.ready
   for(i<- List(0,3)){
-    q(i).in.bits := cat.io.out
+    q(i).in.bits := data_ss
     //q(i).out.ready := io.fifo_io(i).ready
-    when(valid_r){
+    when(valid_ss){
       when(bitmap(i) === 1.U){
         q(i).in.valid := true.B
       }
@@ -197,7 +235,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   }
   
   for(i <- List(1,2,4,5,6,7,8,9,10,11,12,13,14,15,16)){
-    q(i).in.bits := cat.io.out
+    q(i).in.bits := data_ss
   }
   //q(2).out.ready := io.fifo_io(2).ready
   // when(valid_r){
@@ -236,7 +274,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   val readys = Cat(q(2).in.ready,q(4).in.ready,q(5).in.ready,q(8).in.ready)
   //canshuhua how to write?
   //valid + table + address filter
-  val asan_en = valid_r && (bitmap(2) === 1.U) && ((mdata_r >= "h80004470".U) && (mdata_r <= "h80025000".U))
+  val asan_en = valid_ss && (bitmap(2) === 1.U) && ((mdata_r >= "h80004470".U) && (mdata_r <= "h80025000".U))
   rr_arb.io.req := readys & Fill(4,asan_en)
   // for((i,j) <- Seq((0,2),(1,4),(2,5),(3,8))){
   //   q(j).in.valid := rr_arb.io.gnt(i).asBool
@@ -318,7 +356,7 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   }
 
   //搞counter
-  when(valid_r){
+  when(valid_ss){
     when(bitmap(1) === 1.U){
       rr_counter.io.en := true.B
       for(i<- List(1,6,7,9,10)){

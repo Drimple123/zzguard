@@ -26,7 +26,7 @@ class asan_sram extends Module{
   io.rocc_in.ready := true.B
 
   //din decode
-  val lors_addr = io.din.bits(103,64)
+  val lors_addr = io.din.bits(63,0)
   val sram_addr = (lors_addr - "h80004470".U) >> 5.U
   val lors_addr_r = RegNext(lors_addr)
 

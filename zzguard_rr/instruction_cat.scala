@@ -79,3 +79,26 @@ class instruction_cat1 extends Module{
   io.out := out_w
 }
 
+
+class instruction_cat2 extends Module{
+  val io = IO(new Bundle{
+    //val ins      =   Input(UInt(32.W))
+    val wdata    =   Input(UInt(64.W))
+    val mdata    =   Input(UInt(64.W))
+    val npc      =   Input(UInt(40.W))
+    val req_addr =   Input(UInt(40.W))
+    val sel      =   Input(UInt(4.W))
+    val out      =   Output(UInt(64.W))
+
+    //val ready   =   Input(Bool())
+    //val valid   =   Output(Bool())
+  })
+  dontTouch(io)
+  io.out := MuxCase(0.U, Array(
+    (io.sel(3) === 1.U) -> io.wdata,
+    (io.sel(2) === 1.U) -> io.mdata,
+    (io.sel(1) === 1.U) -> io.npc,
+    (io.sel(0) === 1.U) -> io.req_addr
+  ))
+
+}

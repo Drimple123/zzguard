@@ -28,23 +28,35 @@ class mini_decode extends Module{
   })
   //din  ins+wb+mem    wb存起来   mem比较
   //ins_type 2是ret,3是jal或jalr
+  // when(io.valid){
+  //   when(io.din(159,128) ===  "h8067".U){
+  //     io.ins_type := 2.U
+  //     io.data     := io.din(63,0)
+  //   }
+  //   .elsewhen(io.din(139,135) =/= 0.U){
+  //     io.ins_type := 3.U
+  //     io.data     := io.din(127,64)
+  //   }
+  //   .otherwise{
+  //     io.ins_type := 0.U
+  //     io.data     := 0.U
+  //   }
+  // }
+  // .otherwise{
+  //   io.ins_type   := 0.U
+  //   io.data       := 0.U
+  // }
+  io.data := io.din(39,0)
   when(io.valid){
-    when(io.din(159,128) ===  "h8067".U){
+    when(io.din(63,60) === 15.U){
       io.ins_type := 2.U
-      io.data     := io.din(63,0)
-    }
-    .elsewhen(io.din(139,135) =/= 0.U){
-      io.ins_type := 3.U
-      io.data     := io.din(127,64)
     }
     .otherwise{
-      io.ins_type := 0.U
-      io.data     := 0.U
+      io.ins_type := 3.U
     }
   }
   .otherwise{
-    io.ins_type   := 0.U
-    io.data       := 0.U
+    io.ins_type := 0.U
   }
   
 }
