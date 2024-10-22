@@ -96,3 +96,5 @@ class look_2table_ram(width: Int) extends Module {
 
 
 
+
+

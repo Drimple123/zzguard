@@ -89,14 +89,15 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   val valid_ss = valid_r && j_nen
 
   //shadow stack bypass
-  when(din_ins(11,0) === "h6f".U){//j
-    j_nen := false.B
-    ret_en := false.B
-  }
-  .elsewhen(din_ins(11,0) === "h67".U){
+  when(din_ins === "h8067".U){ //ret
     ret_en := true.B
     j_nen := true.B
   }
+  .elsewhen((din_ins(11,0) === "h6f".U) || (din_ins(11,0) === "h67".U)){//j or jr
+    j_nen := false.B
+    ret_en := false.B
+  }
+  
   .otherwise{
     j_nen := true.B
     ret_en := false.B
@@ -172,24 +173,24 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   val bitmap = WireDefault(0.U(4.W))
   bitmap := table.io.bitmap
 
-  val cat = Module(new instruction_cat1)
+  // val cat = Module(new instruction_cat1)
   
 
-  //cat.io.in_1  := io.din_pc
-  cat.io.ins    := ins_r
-  cat.io.wdata  := wdata_r
-  cat.io.mdata  := mdata_r
-  cat.io.npc    := npc_r
-  cat.io.req_addr := req_addr_r
+  // //cat.io.in_1  := io.din_pc
+  // cat.io.ins    := ins_r
+  // cat.io.wdata  := wdata_r
+  // cat.io.mdata  := mdata_r
+  // cat.io.npc    := npc_r
+  // cat.io.req_addr := req_addr_r
 
-  cat.io.sel    := table.io.sel
+  // cat.io.sel    := Mux(ret_en, 2.U, table.io.sel)
   
   val cat2 = Module(new instruction_cat2)
   cat2.io.wdata := wdata_r
   cat2.io.mdata := mdata_r
   cat2.io.npc := npc_r
   cat2.io.req_addr := req_addr_r
-  cat2.io.sel := table.io.sel
+  cat2.io.sel := Mux(ret_en, 2.U, table.io.sel)
 
   //if ret, mark qian 4 bit of data
   val data_ss = Wire(UInt(64.W))
