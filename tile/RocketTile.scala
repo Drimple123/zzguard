@@ -165,61 +165,52 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
   val core = Module(new Rocket(outer)(outer.p))
 
   //===== zzguardrr: Start ====//
-  //给rocc模块加io的,被迫加到了coreio上，给它填上，免得作妖
-  // val fill_dataIO = VecInit(Seq.fill(8)(Module(new fill_laji_io(160)).io))
-  // for(i<-0 to 7){
-  //   core.io.rocc.fifo_io(i) <> fill_dataIO(i).deq
-  // }
-
-  // val fill_asanIO = Module(new fill_laji_io(55))
-  // core.io.rocc.asan_io <> fill_asanIO.io.deq
-  // core.io.rocc.fifo_ready := false.B
 
   if(outer.rocketParams.tileId == 0){
-    println("######zzguard###########   tileid: ",outer.rocketParams.tileId,"  ############")
+    //println("######zzguard###########   tileid: ",outer.rocketParams.tileId,"  ############")
     outer.ins_tile_out.get.bundle := core.io.ins.get
     //rocc
     // outer.addr_out.get.bundle := outer.roccs(0).module.io.asan_addr
     // outer.size_out.get.bundle := outer.roccs(0).module.io.asan_size
     // outer.valid_out.get.bundle := outer.roccs(0).module.io.asan_valid
     // outer.funct_out.get.bundle := outer.roccs(0).module.io.asan_funct
-    for(i<-0 to 10){
+    for(i<-0 to 9){
       outer.data_bits_out_nodes.get(i).bundle:= outer.roccs(0).module.io.fifo_io.get(i).bits
       outer.data_valid_out_nodes.get(i).bundle:= outer.roccs(0).module.io.fifo_io.get(i).valid
       outer.roccs(0).module.io.fifo_io.get(i).ready := outer.data_ready_in_nodes.get(i).bundle
 
     }
 
-    for((i,j) <- List((11,0),(12,1),(13,2))){
-      outer.data_bits_out_nodes_2.get(j).bundle:= outer.roccs(0).module.io.fifo_io.get(i).bits
-      outer.data_valid_out_nodes_2.get(j).bundle:= outer.roccs(0).module.io.fifo_io.get(i).valid
-      outer.roccs(0).module.io.fifo_io.get(i).ready := outer.data_ready_in_nodes_2.get(j).bundle
+    // for((i,j) <- List((11,0),(12,1),(13,2))){
+    //   outer.data_bits_out_nodes_2.get(j).bundle:= outer.roccs(0).module.io.fifo_io.get(i).bits
+    //   outer.data_valid_out_nodes_2.get(j).bundle:= outer.roccs(0).module.io.fifo_io.get(i).valid
+    //   outer.roccs(0).module.io.fifo_io.get(i).ready := outer.data_ready_in_nodes_2.get(j).bundle
 
-    }
+    // }
 
-    for((i,j) <- List((14,0),(15,1),(16,2))){
-      outer.data_bits_out_nodes_3.get(j).bundle:= outer.roccs(0).module.io.fifo_io.get(i).bits
-      outer.data_valid_out_nodes_3.get(j).bundle:= outer.roccs(0).module.io.fifo_io.get(i).valid
-      outer.roccs(0).module.io.fifo_io.get(i).ready := outer.data_ready_in_nodes_3.get(j).bundle
+    // for((i,j) <- List((14,0),(15,1),(16,2))){
+    //   outer.data_bits_out_nodes_3.get(j).bundle:= outer.roccs(0).module.io.fifo_io.get(i).bits
+    //   outer.data_valid_out_nodes_3.get(j).bundle:= outer.roccs(0).module.io.fifo_io.get(i).valid
+    //   outer.roccs(0).module.io.fifo_io.get(i).ready := outer.data_ready_in_nodes_3.get(j).bundle
 
-    }
+    // }
 
     
 
     
 
     core.io.ready_stall.get := outer.roccs(0).module.io.fifo_ready.get
-    outer.rocc_bits_out.get.bundle := outer.roccs(0).module.io.asan_io.get(0).bits
-    outer.rocc_valid_out.get.bundle := outer.roccs(0).module.io.asan_io.get(0).valid
-    outer.roccs(0).module.io.asan_io.get(0).ready := outer.rocc_ready_in.get.bundle
+    outer.rocc_bits_out.get.bundle := outer.roccs(0).module.io.asan_io.get.bits
+    outer.rocc_valid_out.get.bundle := outer.roccs(0).module.io.asan_io.get.valid
+    outer.roccs(0).module.io.asan_io.get.ready := outer.rocc_ready_in.get.bundle
 
-    outer.rocc_bits_out_2.get.bundle := outer.roccs(0).module.io.asan_io.get(1).bits
-    outer.rocc_valid_out_2.get.bundle := outer.roccs(0).module.io.asan_io.get(1).valid
-    outer.roccs(0).module.io.asan_io.get(1).ready := outer.rocc_ready_in_2.get.bundle
+    // outer.rocc_bits_out_2.get.bundle := outer.roccs(0).module.io.asan_io.get(1).bits
+    // outer.rocc_valid_out_2.get.bundle := outer.roccs(0).module.io.asan_io.get(1).valid
+    // outer.roccs(0).module.io.asan_io.get(1).ready := outer.rocc_ready_in_2.get.bundle
 
-    outer.rocc_bits_out_3.get.bundle := outer.roccs(0).module.io.asan_io.get(2).bits
-    outer.rocc_valid_out_3.get.bundle := outer.roccs(0).module.io.asan_io.get(2).valid
-    outer.roccs(0).module.io.asan_io.get(2).ready := outer.rocc_ready_in_3.get.bundle
+    // outer.rocc_bits_out_3.get.bundle := outer.roccs(0).module.io.asan_io.get(2).bits
+    // outer.rocc_valid_out_3.get.bundle := outer.roccs(0).module.io.asan_io.get(2).valid
+    // outer.roccs(0).module.io.asan_io.get(2).ready := outer.rocc_ready_in_3.get.bundle
 
     //新的直接从core里面拉到zzguard的一条路
     outer.roccs(0).module.io.valid.get := core.io.valid.get
@@ -258,7 +249,7 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
   
   }
   else if(outer.rocketParams.tileId == 1){
-    println("######zzguard###########   tileid: ",outer.rocketParams.tileId,"  ############")
+    //println("######zzguard###########   tileid: ",outer.rocketParams.tileId,"  ############")
     //val zzzzzz_tile1 = Module(new Zzzzzz_Imp)
     //zzzzzz_tile1.io.in := outer.ins_tile_in.get.bundle
 
@@ -290,22 +281,23 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     //   outer.roccs(0).module.io.fifo_io(i).ready := true.B
     // }
 
-    val q = VecInit(Seq.fill(11)(Module(new Queue(UInt(160.W), 32)).io))
+    val q = VecInit(Seq.fill(10)(Module(new Queue(UInt(64.W), 32)).io))
+
     val q_full_counter = RegInit(VecInit(Seq.fill(11)(0.U(32.W))))
     dontTouch(q_full_counter)
-    for(i <- 0 to 10){
+    for(i <- 0 to 9){
       when(q(i).count === 32.U){
         q_full_counter(i) := q_full_counter(i) + 1.U
       }
     }
-    for(i<-0 to 10){
-      dontTouch(q(i).deq)
+    for(i<-0 to 9){
+      dontTouch(q(i))
     }
-    for(i<-0 to 10){
+    for(i<-0 to 9){
       q(i).enq.bits := outer.data_bits_in_nodes.get(i).bundle
       q(i).enq.valid := outer.data_valid_in_nodes.get(i).bundle
       outer.data_ready_out_nodes.get(i).bundle := q(i).enq.ready
-      dontTouch(q(i).count)
+      //dontTouch(q(i).count)
       //q(i).deq.ready := true.B
     }
     //q(3).deq.ready := true.B
@@ -320,18 +312,18 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     dontTouch(q_rocc.io)
     //接上counter_losuan
     //val counter_losuan_1 = Module(new counter_losuan)
-    val counter_ls = VecInit(Seq.fill(5)(Module(new counter_losuan).io))
-    //counter_losuan_1.io.enq <> q(1).deq
-    counter_ls(0).enq <> q(1).deq
-    counter_ls(1).enq <> q(6).deq
-    counter_ls(2).enq <> q(7).deq
-    counter_ls(3).enq <> q(9).deq
-    counter_ls(4).enq <> q(10).deq
+    // val counter_ls = VecInit(Seq.fill(5)(Module(new counter_losuan).io))
+    // //counter_losuan_1.io.enq <> q(1).deq
+    // counter_ls(0).enq <> q(1).deq
+    // counter_ls(1).enq <> q(6).deq
+    // counter_ls(2).enq <> q(7).deq
+    // counter_ls(3).enq <> q(9).deq
+    // counter_ls(4).enq <> q(10).deq
 
     
     //把3个counter的结果合起来
-    val num_ls = counter_ls(0).number_losuan + counter_ls(1).number_losuan + counter_ls(2).number_losuan + counter_ls(3).number_losuan + counter_ls(4).number_losuan
-    dontTouch(num_ls)
+    // val num_ls = counter_ls(0).number_losuan + counter_ls(1).number_losuan + counter_ls(2).number_losuan + counter_ls(3).number_losuan + counter_ls(4).number_losuan
+    // dontTouch(num_ls)
 
     //接上ss
     val ss = Module(new shadow_stack)
@@ -362,9 +354,13 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     // outer.roccs(3).module.io.din.get <> q(8).deq
 
     val asan_srams = VecInit(Seq.fill(4)(Module(new asan_sram).io))
-    for((i,j) <- Seq((0,2),(1,4),(2,5),(3,8))){
+    for((i,j) <- Seq((0,1),(1,2),(2,3),(3,4))){
       asan_srams(i).din <> q(j).deq
       asan_srams(i).rocc_in <> q_rocc.io.deq
+    }
+
+    for(i <- 5 to 9){
+      q(i).deq.ready := true.B
     }
 
     // Asan_3.io.rocc_in <> q_rocc.io.deq
@@ -398,18 +394,18 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
     //core.io.asan_cmd.get  := Asan_1.io.cmd
     //core.io.asan_data_in.get := Asan_1.io.out_data
 
-    val rowhammer_1 = Module(new rowhammer)
-    rowhammer_1.io.din <> q(3).deq
-    val mem_acc_fifo_row = Module(new Queue((new mem_ac_io),16))
-    mem_acc_fifo_row.io.enq.valid := rowhammer_1.io.rowham_req_valid
-    mem_acc_fifo_row.io.enq.bits.addr := rowhammer_1.io.rowham_dmemaddr
-    mem_acc_fifo_row.io.enq.bits.cmd := 0.U
-    mem_acc_fifo_row.io.enq.bits.size := 0.U
-    mem_acc_fifo_row.io.enq.bits.tag := 3.U
-    rowhammer_1.io.valid_mem := core.io.valid_mem.get
-    //rowhammer_1.io.resp_tag := core.io.resp_tag.get
-    rowhammer_1.io.resp_tag := core.io.resp_tag.get
-    core.io.mem_acc_io_row.get <> mem_acc_fifo_row.io.deq
+    // val rowhammer_1 = Module(new rowhammer)
+    // rowhammer_1.io.din <> q(3).deq
+    // val mem_acc_fifo_row = Module(new Queue((new mem_ac_io),16))
+    // mem_acc_fifo_row.io.enq.valid := rowhammer_1.io.rowham_req_valid
+    // mem_acc_fifo_row.io.enq.bits.addr := rowhammer_1.io.rowham_dmemaddr
+    // mem_acc_fifo_row.io.enq.bits.cmd := 0.U
+    // mem_acc_fifo_row.io.enq.bits.size := 0.U
+    // mem_acc_fifo_row.io.enq.bits.tag := 3.U
+    // rowhammer_1.io.valid_mem := core.io.valid_mem.get
+    // //rowhammer_1.io.resp_tag := core.io.resp_tag.get
+    // rowhammer_1.io.resp_tag := core.io.resp_tag.get
+    // core.io.mem_acc_io_row.get <> mem_acc_fifo_row.io.deq
 
 
 
@@ -424,52 +420,52 @@ class RocketTileModuleImp(outer: RocketTile) extends BaseTileModuleImp(outer)
 
     
   }
-  else if(outer.rocketParams.tileId == 2){
-    val q = VecInit(Seq.fill(3)(Module(new Queue(UInt(160.W), 32)).io))
-    val q_rocc = Module(new Queue(UInt(55.W),16))
+  // else if(outer.rocketParams.tileId == 2){
+  //   val q = VecInit(Seq.fill(3)(Module(new Queue(UInt(160.W), 32)).io))
+  //   val q_rocc = Module(new Queue(UInt(55.W),16))
 
 
-    q_rocc.io.enq.bits  := outer.rocc_bits_in_2.get.bundle
-    q_rocc.io.enq.valid := outer.rocc_valid_in_2.get.bundle
-    outer.rocc_ready_out_2.get.bundle := q_rocc.io.enq.ready
+  //   // q_rocc.io.enq.bits  := outer.rocc_bits_in_2.get.bundle
+  //   // q_rocc.io.enq.valid := outer.rocc_valid_in_2.get.bundle
+  //   // outer.rocc_ready_out_2.get.bundle := q_rocc.io.enq.ready
 
 
-    for(i<-0 to 2){
-      q(i).enq.bits := outer.data_bits_in_nodes_2.get(i).bundle
-      q(i).enq.valid := outer.data_valid_in_nodes_2.get(i).bundle
-      outer.data_ready_out_nodes_2.get(i).bundle := q(i).enq.ready
-      dontTouch(q(i).count)
-      dontTouch(q(i).deq)
-    }
+  //   for(i<-0 to 2){
+  //     q(i).enq.bits := outer.data_bits_in_nodes_2.get(i).bundle
+  //     q(i).enq.valid := outer.data_valid_in_nodes_2.get(i).bundle
+  //     outer.data_ready_out_nodes_2.get(i).bundle := q(i).enq.ready
+  //     dontTouch(q(i).count)
+  //     dontTouch(q(i).deq)
+  //   }
 
-    for(i <- 0 to 2){
-      outer.roccs(i).module.io.din.get <> q(i).deq
-      outer.roccs(i).module.io.rocc_in.get <> q_rocc.io.deq
-    }
-  }
-  else if(outer.rocketParams.tileId == 3){
-    val q = VecInit(Seq.fill(3)(Module(new Queue(UInt(160.W), 32)).io))
-    val q_rocc = Module(new Queue(UInt(55.W),16))
-
-
-    q_rocc.io.enq.bits  := outer.rocc_bits_in_3.get.bundle
-    q_rocc.io.enq.valid := outer.rocc_valid_in_3.get.bundle
-    outer.rocc_ready_out_3.get.bundle := q_rocc.io.enq.ready
+  //   for(i <- 0 to 2){
+  //     outer.roccs(i).module.io.din.get <> q(i).deq
+  //     outer.roccs(i).module.io.rocc_in.get <> q_rocc.io.deq
+  //   }
+  // }
+  // else if(outer.rocketParams.tileId == 3){
+  //   val q = VecInit(Seq.fill(3)(Module(new Queue(UInt(160.W), 32)).io))
+  //   val q_rocc = Module(new Queue(UInt(55.W),16))
 
 
-    for(i<-0 to 2){
-      q(i).enq.bits := outer.data_bits_in_nodes_3.get(i).bundle
-      q(i).enq.valid := outer.data_valid_in_nodes_3.get(i).bundle
-      outer.data_ready_out_nodes_3.get(i).bundle := q(i).enq.ready
-      dontTouch(q(i).count)
-      dontTouch(q(i).deq)
-    }
+  //   // q_rocc.io.enq.bits  := outer.rocc_bits_in_3.get.bundle
+  //   // q_rocc.io.enq.valid := outer.rocc_valid_in_3.get.bundle
+  //   // outer.rocc_ready_out_3.get.bundle := q_rocc.io.enq.ready
 
-    for(i <- 0 to 2){
-      outer.roccs(i).module.io.din.get <> q(i).deq
-      outer.roccs(i).module.io.rocc_in.get <> q_rocc.io.deq
-    }
-  }
+
+  //   for(i<-0 to 2){
+  //     q(i).enq.bits := outer.data_bits_in_nodes_3.get(i).bundle
+  //     q(i).enq.valid := outer.data_valid_in_nodes_3.get(i).bundle
+  //     outer.data_ready_out_nodes_3.get(i).bundle := q(i).enq.ready
+  //     dontTouch(q(i).count)
+  //     dontTouch(q(i).deq)
+  //   }
+
+  //   for(i <- 0 to 2){
+  //     outer.roccs(i).module.io.din.get <> q(i).deq
+  //     outer.roccs(i).module.io.rocc_in.get <> q_rocc.io.deq
+  //   }
+  // }
   //===== zzguardrr: End   ====//
 
   // reset vector is connected in the Frontend to s2_pc

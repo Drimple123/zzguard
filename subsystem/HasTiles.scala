@@ -196,35 +196,35 @@ trait CanAttachTile {
       // context.size_mid := domain.element.size_out.get
       // context.valid_mid := domain.element.valid_out.get
       // context.funct_mid := domain.element.funct_out.get
-      for(i<-0 to 10){
+      for(i<-0 to 9){
         context.data_bits_mid(i) := domain.element.data_bits_out_nodes.get(i)
         context.data_valid_mid(i) := domain.element.data_valid_out_nodes.get(i)
         domain.element.data_ready_in_nodes.get(i) := context.data_ready_mid(i)
       }
 
-      for(i<-0 to 2){
-        context.data_bits_mid_2(i) := domain.element.data_bits_out_nodes_2.get(i)
-        context.data_valid_mid_2(i) := domain.element.data_valid_out_nodes_2.get(i)
-        domain.element.data_ready_in_nodes_2.get(i) := context.data_ready_mid_2(i)
-      }
+      // for(i<-0 to 2){
+      //   context.data_bits_mid_2(i) := domain.element.data_bits_out_nodes_2.get(i)
+      //   context.data_valid_mid_2(i) := domain.element.data_valid_out_nodes_2.get(i)
+      //   domain.element.data_ready_in_nodes_2.get(i) := context.data_ready_mid_2(i)
+      // }
 
-      for(i<-0 to 2){
-        context.data_bits_mid_3(i) := domain.element.data_bits_out_nodes_3.get(i)
-        context.data_valid_mid_3(i) := domain.element.data_valid_out_nodes_3.get(i)
-        domain.element.data_ready_in_nodes_3.get(i) := context.data_ready_mid_3(i)
-      }
+      // for(i<-0 to 2){
+      //   context.data_bits_mid_3(i) := domain.element.data_bits_out_nodes_3.get(i)
+      //   context.data_valid_mid_3(i) := domain.element.data_valid_out_nodes_3.get(i)
+      //   domain.element.data_ready_in_nodes_3.get(i) := context.data_ready_mid_3(i)
+      // }
 
       context.rocc_bits_mid := domain.element.rocc_bits_out.get
       context.rocc_valid_mid := domain.element.rocc_valid_out.get
       domain.element.rocc_ready_in.get := context.rocc_ready_mid
 
-      context.rocc_bits_mid_2 := domain.element.rocc_bits_out_2.get
-      context.rocc_valid_mid_2 := domain.element.rocc_valid_out_2.get
-      domain.element.rocc_ready_in_2.get := context.rocc_ready_mid_2
+      // context.rocc_bits_mid_2 := domain.element.rocc_bits_out_2.get
+      // context.rocc_valid_mid_2 := domain.element.rocc_valid_out_2.get
+      // domain.element.rocc_ready_in_2.get := context.rocc_ready_mid_2
 
-      context.rocc_bits_mid_3 := domain.element.rocc_bits_out_3.get
-      context.rocc_valid_mid_3 := domain.element.rocc_valid_out_3.get
-      domain.element.rocc_ready_in_3.get := context.rocc_ready_mid_3
+      // context.rocc_bits_mid_3 := domain.element.rocc_bits_out_3.get
+      // context.rocc_valid_mid_3 := domain.element.rocc_valid_out_3.get
+      // domain.element.rocc_ready_in_3.get := context.rocc_ready_mid_3
 
 
 
@@ -241,7 +241,7 @@ trait CanAttachTile {
       // domain.element.size_in.get := context.size_mid
       // domain.element.valid_in.get := context.valid_mid
       // domain.element.funct_in.get := context.funct_mid
-      for(i<-0 to 10){
+      for(i<-0 to 9){
         domain.element.data_bits_in_nodes.get(i) := context.data_bits_mid(i)
         domain.element.data_valid_in_nodes.get(i) := context.data_valid_mid(i)
         context.data_ready_mid(i) := domain.element.data_ready_out_nodes.get(i)
@@ -255,29 +255,29 @@ trait CanAttachTile {
       
     }
 
-    else if(domain.element.tileId == 2){
-      for(i<-0 to 2){
-        domain.element.data_bits_in_nodes_2.get(i) := context.data_bits_mid_2(i)
-        domain.element.data_valid_in_nodes_2.get(i) := context.data_valid_mid_2(i)
-        context.data_ready_mid_2(i) := domain.element.data_ready_out_nodes_2.get(i)
-      }
+    // else if(domain.element.tileId == 2){
+    //   for(i<-0 to 2){
+    //     domain.element.data_bits_in_nodes_2.get(i) := context.data_bits_mid_2(i)
+    //     domain.element.data_valid_in_nodes_2.get(i) := context.data_valid_mid_2(i)
+    //     context.data_ready_mid_2(i) := domain.element.data_ready_out_nodes_2.get(i)
+    //   }
       
-      domain.element.rocc_bits_in_2.get := context.rocc_bits_mid_2
-      domain.element.rocc_valid_in_2.get := context.rocc_valid_mid_2
-      context.rocc_ready_mid_2 := domain.element.rocc_ready_out_2.get
-    }
+    //   // domain.element.rocc_bits_in_2.get := context.rocc_bits_mid_2
+    //   // domain.element.rocc_valid_in_2.get := context.rocc_valid_mid_2
+    //   // context.rocc_ready_mid_2 := domain.element.rocc_ready_out_2.get
+    // }
 
-    else if(domain.element.tileId == 3){
-      for(i<-0 to 2){
-        domain.element.data_bits_in_nodes_3.get(i) := context.data_bits_mid_3(i)
-        domain.element.data_valid_in_nodes_3.get(i) := context.data_valid_mid_3(i)
-        context.data_ready_mid_3(i) := domain.element.data_ready_out_nodes_3.get(i)
-      }
+    // else if(domain.element.tileId == 3){
+    //   for(i<-0 to 2){
+    //     domain.element.data_bits_in_nodes_3.get(i) := context.data_bits_mid_3(i)
+    //     domain.element.data_valid_in_nodes_3.get(i) := context.data_valid_mid_3(i)
+    //     context.data_ready_mid_3(i) := domain.element.data_ready_out_nodes_3.get(i)
+    //   }
       
-      domain.element.rocc_bits_in_3.get := context.rocc_bits_mid_3
-      domain.element.rocc_valid_in_3.get := context.rocc_valid_mid_3
-      context.rocc_ready_mid_3 := domain.element.rocc_ready_out_3.get
-    }
+    //   // domain.element.rocc_bits_in_3.get := context.rocc_bits_mid_3
+    //   // domain.element.rocc_valid_in_3.get := context.rocc_valid_mid_3
+    //   // context.rocc_ready_mid_3 := domain.element.rocc_ready_out_3.get
+    // }
     
   }
   //===== zzguardrr: End   ====//
