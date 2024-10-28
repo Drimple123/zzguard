@@ -81,10 +81,12 @@ class fifox(width: Int, depth: Int, x: Int) extends Module{
        val in   = Flipped(Decoupled(UInt(width.W)))
        val out  = Decoupled(UInt(width.W))
        val count= Output(UInt(8.W))
+       val yao_full = Output(Bool())
     })
     dontTouch(io)
     val q = Module(new Queue(UInt(width.W), depth))
     q.io.enq <> io.in
+    io.yao_full := (q.io.count >= (depth-5).U) 
     io.count := q.io.count
     val (cnt, yes) = Counter(true.B, x);
 

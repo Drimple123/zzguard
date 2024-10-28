@@ -77,6 +77,26 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   //q0是ss,q1到q4是asan，其他的备用
   val q = VecInit(Seq.fill(10)(Module(new fifox(64, 32, 10)).io))
 
+  //搞个counter统计每个fifo valid的次数
+  val valid_counter = RegInit(VecInit(Seq.fill(4)(0.U(15.W))))
+  for(i <- 0 to 3){
+    when(q(i+1).in.valid){
+      valid_counter(i) := valid_counter(i) + 1.U
+    }
+    dontTouch(valid_counter(i))
+  }
+
+  //搞个counter统计每个fifo yao_full的次数
+  val yao_full_counter = RegInit(VecInit(Seq.fill(4)(0.U(15.W))))
+  for(i <- 0 to 3){
+    when(q(i+1).yao_full){
+      yao_full_counter(i) := yao_full_counter(i) + 1.U
+    }
+    dontTouch(yao_full_counter(i))
+  }
+
+
+
   //一个宽度为4的rr_arb用于asan
   val rr_arb = Module(new zz_RRarbiter(4))
 
@@ -197,12 +217,13 @@ class zzguardrr_ramImp_new(outer: zzguardrr_ram_new)(implicit p: Parameters) ext
   
 
   //每组至少有一个ready就不stall
-  io.fifo_ready.get := q(0).in.ready & (q(1).in.ready || q(2).in.ready || q(3).in.ready || q(4).in.ready)
+  //io.fifo_ready.get := q(0).in.ready & (q(1).in.ready || q(2).in.ready || q(3).in.ready || q(4).in.ready)
+  io.fifo_ready.get := (~q(0).yao_full) & ((~q(4).yao_full) || (~q(3).yao_full) || (~q(2).yao_full))
 
   //rr_arb的io连接
-  val readys = Cat(q(1).in.ready,q(2).in.ready,q(3).in.ready,q(4).in.ready)
+  val readys = Cat(q(4).in.ready,q(3).in.ready,q(2).in.ready,0.U)
   //valid + table + address filter
-  val asan_en = valid_r && (bitmap(2) === 1.U) && ((mdata_r >= "h80004470".U) && (mdata_r <= "h80025000".U))
+  val asan_en = valid_r && (bitmap(2) === 1.U) && ((mdata_r >= "h800044b0".U) && (mdata_r <= "h80025000".U))
   rr_arb.io.req := readys & Fill(4,asan_en)
   // for((i,j) <- Seq((0,2),(1,4),(2,5),(3,8))){
   //   q(j).in.valid := rr_arb.io.gnt(i).asBool

@@ -22,7 +22,7 @@ import chisel3.util._
 class mini_decode extends Module{
   val io = IO(new Bundle{
     val valid     = Input(Bool())
-    val din       = Input(UInt(160.W))
+    val din       = Input(UInt(64.W))
     val ins_type  = Output(UInt(2.W))
     val data      = Output(UInt(64.W))
   })

@@ -7,15 +7,18 @@ import freechips.rocketchip.tile.ClockDividerN
 import freechips.rocketchip.tile._
 import freechips.rocketchip.diplomacy._
 import org.chipsalliance.cde.config.Parameters
+import chisel3.util.experimental.loadMemoryFromFile
 //lht end
 class asan_sram extends Module{
   val io = IO(new Bundle{
-    val din = Flipped(Decoupled(UInt(160.W)))
+    val din = Flipped(Decoupled(UInt(64.W)))
     val rocc_in = Flipped(Decoupled(UInt(55.W)))
 
   })
   //
   val mem = SyncReadMem(4096,UInt(6.W))
+
+  //loadMemoryFromFile(mem, "~/work/hello/sram_init.hex")
 
   val data_back = RegInit(0.U)
   val valid = RegInit(false.B)
@@ -26,14 +29,14 @@ class asan_sram extends Module{
   io.rocc_in.ready := true.B
 
   //din decode
-  val lors_addr = io.din.bits(63,0)
-  val sram_addr = (lors_addr - "h80004470".U) >> 5.U
+  val lors_addr = io.din.bits
+  val sram_addr = (lors_addr - "h800044b0".U) >> 5.U
   val lors_addr_r = RegNext(lors_addr)
 
   //rocc decode
   val rocc_funct = io.rocc_in.bits(6,0)
   val rocc_addr = io.rocc_in.bits(54,15)
-  val rocc_addr_w = (rocc_addr - "h80004470".U) >> 5.U
+  val rocc_addr_w = (rocc_addr - "h800044b0".U) >> 5.U
   val rocc_size = io.rocc_in.bits(14,7)
 
   dontTouch(lors_addr)
@@ -41,13 +44,16 @@ class asan_sram extends Module{
   dontTouch(rocc_funct)
   dontTouch(rocc_addr)
   dontTouch(rocc_size)
+  dontTouch(rocc_addr_w)
   //result
   val can_use_r = RegInit(true.B)
   val uaf_r     = RegInit(false.B)
   val overflow_r= RegInit(false.B)
+  val not_malloc= RegInit(false.B)
   dontTouch(can_use_r)
   dontTouch(uaf_r)
   dontTouch(overflow_r)
+  dontTouch(not_malloc)
 
 
   //rocc 9,first address of heap  10,malloc sram addr and size
@@ -76,27 +82,32 @@ class asan_sram extends Module{
       uaf_r     := true.B
       can_use_r := false.B
       overflow_r:= false.B
+      not_malloc:= false.B
     }
-    .elsewhen(data_back === 0.U){
+    .elsewhen(data_back === 62.U){
       uaf_r     := false.B
-      can_use_r := true.B
+      can_use_r := false.B
       overflow_r:= false.B
+      not_malloc:= true.B
     }
     .elsewhen(data_back >= lors_addr_r(4,0)){
       uaf_r     := false.B
       can_use_r := true.B
       overflow_r:= false.B
+      not_malloc:= false.B
     }
     .otherwise{
       uaf_r     := false.B
       can_use_r := false.B
       overflow_r:= true.B
+      not_malloc:= false.B
     }
   }
   .otherwise{
     uaf_r     := false.B
     can_use_r := true.B
     overflow_r:= false.B
+    not_malloc:= false.B
   }
 
 
