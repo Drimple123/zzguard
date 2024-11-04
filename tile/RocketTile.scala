@@ -103,7 +103,7 @@ class RocketTile private(
   }
 
   //===== zzguardrr: Start ====//
-  val zzzzz_3 = Module(new Zzzzz_Imp)
+  //val zzzzz_3 = Module(new Zzzzz_Imp)
   //===== zzguardrr: End   ====//
 
   val tile_master_blocker =
