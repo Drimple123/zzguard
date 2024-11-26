@@ -11,6 +11,7 @@ import freechips.rocketchip.tile._
 import freechips.rocketchip.util._
 import freechips.rocketchip.util.property
 import scala.collection.mutable.ArrayBuffer
+import midas.targetutils.SynthesizePrintf
 
 //===== zzguardrr: Start ====//
 import freechips.rocketchip.zzguardrr._
@@ -1021,6 +1022,10 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
   val ex_dcache_tag = Cat(ex_waddr, ex_ctrl.fp)
   require(coreParams.dcacheReqTagBits >= ex_dcache_tag.getWidth)
   //zzguard:start
+  midas.targetutils.SynthesizePrintf(printf("pc=0x%x  valid=%d inst=0x%x stall=%d\n", wb_reg_pc, wb_reg_valid, wb_reg_inst, ctrl_stalld))
+
+
+
   if(tileParams.tileId == 1){
   
     // val Asan_core1 = Module(new Asan_Imp)
